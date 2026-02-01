@@ -1,0 +1,24 @@
+name: Porticide
+options:
+  bundleIdPrefix: com.giordanozonta
+settings:
+  base:
+    MACOSX_DEPLOYMENT_TARGET: 13.0
+targets:
+  Porticide:
+    type: application
+    platform: macOS
+    sources:
+      - Sources/Porticide
+    info:
+      path: Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.giordanozonta.porticide
+  PorticideTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - Tests/PorticideTests
+    dependencies:
+      - target: Porticide
