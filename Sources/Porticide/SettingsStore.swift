@@ -58,3 +58,4 @@ final class SettingsStore: ObservableObject {
     }
 }
 // Fix: Settings not persisting correctly
+// Add system process filter option
