@@ -69,3 +69,4 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 // Add keyboard shortcuts support
+// Add launch at login support
