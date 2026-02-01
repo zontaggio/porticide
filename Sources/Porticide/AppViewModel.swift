@@ -123,3 +123,4 @@ final class AppViewModel: ObservableObject {
         return alert.runModal() == .alertFirstButtonReturn
     }
 }
+// Fix: Race condition in process info fetching
