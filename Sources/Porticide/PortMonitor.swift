@@ -88,3 +88,4 @@ final class PortMonitor: @unchecked Sendable {
         return String(data: data, encoding: .utf8) ?? ""
     }
 }
+// TODO: Add error handling for permission issues
