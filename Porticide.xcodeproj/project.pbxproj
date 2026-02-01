@@ -1,0 +1,433 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		07166CDDAE2E197FC84BA488 /* ServiceClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CAA2D7452AC56F3164F67EE /* ServiceClassifier.swift */; };
+		0B6A518411A7500E49A02344 /* PortMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3DA0DAD519A3EEE76BB597D /* PortMonitor.swift */; };
+		1841D04A381731979C274FA8 /* PopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9DF141AE5D5BFAF0315B1E6 /* PopoverView.swift */; };
+		30854B8C5E41072D7A28BEE6 /* LsofParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77010298A3A027A72FE7D27 /* LsofParserTests.swift */; };
+		3F75F05B91FC2E5A3996C13B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2443EC049A29AC21E02665B6 /* SettingsView.swift */; };
+		415F5F55F18DBEE17BDA32C6 /* LsofParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52306210A2D0E73EEF0E197E /* LsofParser.swift */; };
+		43983C7824B36EF40DA00F57 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F42DAF0B9D0ED611154EAA /* AppDelegate.swift */; };
+		7A3A2A24C433C4B69A49427E /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AFF9515783FACF05009D2A /* main.swift */; };
+		823CA4E59184467FAFCCF8B0 /* PathUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = F95E6E425973FCB574DFF630 /* PathUtils.swift */; };
+		8596DF6FC42ECDD3526FA0BA /* PortEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF633FD4B07B1A5D6561E5F5 /* PortEntry.swift */; };
+		88588F51DDD597A2526310B0 /* PortEntry+Details.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9587A4A4BCBAD361820E837 /* PortEntry+Details.swift */; };
+		BF25FA15307BD7EA6D2689AD /* ProcessInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B078ECD09E7D98E30650690D /* ProcessInspector.swift */; };
+		C4F1DDDFD9D022365B60FD53 /* ProcessUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 314289F823AEF892122C3369 /* ProcessUtils.swift */; };
+		CC19BB04DB5F216FFC761305 /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46AFC0F96F70D6880704439F /* AppViewModel.swift */; };
+		E8B4C7B757079C931D95F6D4 /* SettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B35CD327986366C8E827FA94 /* SettingsStore.swift */; };
+		ED2B8A7B6FF8CA65DCB435F5 /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A345F9B83DF2E6FAC6E2CEE /* SettingsWindowController.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BB914633C41F5B5FA6BFD4A8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A48A6CFD68080CDBE138FEA1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 95B4881F4A8428C4AAA865AD;
+			remoteInfo = Porticide;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		2443EC049A29AC21E02665B6 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		314289F823AEF892122C3369 /* ProcessUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessUtils.swift; sourceTree = "<group>"; };
+		46AFC0F96F70D6880704439F /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
+		50AFF9515783FACF05009D2A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		52306210A2D0E73EEF0E197E /* LsofParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LsofParser.swift; sourceTree = "<group>"; };
+		5CAA2D7452AC56F3164F67EE /* ServiceClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceClassifier.swift; sourceTree = "<group>"; };
+		6289AF1420483047753851D7 /* PorticideTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PorticideTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7A345F9B83DF2E6FAC6E2CEE /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		A0F42DAF0B9D0ED611154EAA /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A2C12F41A829F1E8B2F92AE7 /* Porticide.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Porticide.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B078ECD09E7D98E30650690D /* ProcessInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessInspector.swift; sourceTree = "<group>"; };
+		B35CD327986366C8E827FA94 /* SettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsStore.swift; sourceTree = "<group>"; };
+		B9DF141AE5D5BFAF0315B1E6 /* PopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverView.swift; sourceTree = "<group>"; };
+		DF633FD4B07B1A5D6561E5F5 /* PortEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortEntry.swift; sourceTree = "<group>"; };
+		F3DA0DAD519A3EEE76BB597D /* PortMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortMonitor.swift; sourceTree = "<group>"; };
+		F77010298A3A027A72FE7D27 /* LsofParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LsofParserTests.swift; sourceTree = "<group>"; };
+		F9587A4A4BCBAD361820E837 /* PortEntry+Details.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PortEntry+Details.swift"; sourceTree = "<group>"; };
+		F95E6E425973FCB574DFF630 /* PathUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathUtils.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		5A6593C06245F36CA2D0AAE3 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A2C12F41A829F1E8B2F92AE7 /* Porticide.app */,
+				6289AF1420483047753851D7 /* PorticideTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6EA016EEAC8961478F7929B5 /* Porticide */ = {
+			isa = PBXGroup;
+			children = (
+				A0F42DAF0B9D0ED611154EAA /* AppDelegate.swift */,
+				46AFC0F96F70D6880704439F /* AppViewModel.swift */,
+				52306210A2D0E73EEF0E197E /* LsofParser.swift */,
+				50AFF9515783FACF05009D2A /* main.swift */,
+				F95E6E425973FCB574DFF630 /* PathUtils.swift */,
+				B9DF141AE5D5BFAF0315B1E6 /* PopoverView.swift */,
+				DF633FD4B07B1A5D6561E5F5 /* PortEntry.swift */,
+				F9587A4A4BCBAD361820E837 /* PortEntry+Details.swift */,
+				F3DA0DAD519A3EEE76BB597D /* PortMonitor.swift */,
+				B078ECD09E7D98E30650690D /* ProcessInspector.swift */,
+				314289F823AEF892122C3369 /* ProcessUtils.swift */,
+				5CAA2D7452AC56F3164F67EE /* ServiceClassifier.swift */,
+				B35CD327986366C8E827FA94 /* SettingsStore.swift */,
+				2443EC049A29AC21E02665B6 /* SettingsView.swift */,
+				7A345F9B83DF2E6FAC6E2CEE /* SettingsWindowController.swift */,
+			);
+			name = Porticide;
+			path = Sources/Porticide;
+			sourceTree = "<group>";
+		};
+		7F967248FA0F56DB4CB7C298 = {
+			isa = PBXGroup;
+			children = (
+				6EA016EEAC8961478F7929B5 /* Porticide */,
+				ADF59989E92DF67D62ACBB22 /* PorticideTests */,
+				5A6593C06245F36CA2D0AAE3 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		ADF59989E92DF67D62ACBB22 /* PorticideTests */ = {
+			isa = PBXGroup;
+			children = (
+				F77010298A3A027A72FE7D27 /* LsofParserTests.swift */,
+			);
+			name = PorticideTests;
+			path = Tests/PorticideTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		95B4881F4A8428C4AAA865AD /* Porticide */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 64281125080CE05B4053950F /* Build configuration list for PBXNativeTarget "Porticide" */;
+			buildPhases = (
+				C456B432CC09F699D8949EF6 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Porticide;
+			packageProductDependencies = (
+			);
+			productName = Porticide;
+			productReference = A2C12F41A829F1E8B2F92AE7 /* Porticide.app */;
+			productType = "com.apple.product-type.application";
+		};
+		EAE7FCF1EA53A45B8075FDA2 /* PorticideTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 691623E4B82647384E3AAB14 /* Build configuration list for PBXNativeTarget "PorticideTests" */;
+			buildPhases = (
+				8CB90DB095748ACBC6526AA8 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				722C9E6207CAE107DC85CBA2 /* PBXTargetDependency */,
+			);
+			name = PorticideTests;
+			packageProductDependencies = (
+			);
+			productName = PorticideTests;
+			productReference = 6289AF1420483047753851D7 /* PorticideTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A48A6CFD68080CDBE138FEA1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+			};
+			buildConfigurationList = 80EF2F2801150B97B9512353 /* Build configuration list for PBXProject "Porticide" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 7F967248FA0F56DB4CB7C298;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				95B4881F4A8428C4AAA865AD /* Porticide */,
+				EAE7FCF1EA53A45B8075FDA2 /* PorticideTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8CB90DB095748ACBC6526AA8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				30854B8C5E41072D7A28BEE6 /* LsofParserTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C456B432CC09F699D8949EF6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				43983C7824B36EF40DA00F57 /* AppDelegate.swift in Sources */,
+				CC19BB04DB5F216FFC761305 /* AppViewModel.swift in Sources */,
+				415F5F55F18DBEE17BDA32C6 /* LsofParser.swift in Sources */,
+				823CA4E59184467FAFCCF8B0 /* PathUtils.swift in Sources */,
+				1841D04A381731979C274FA8 /* PopoverView.swift in Sources */,
+				88588F51DDD597A2526310B0 /* PortEntry+Details.swift in Sources */,
+				8596DF6FC42ECDD3526FA0BA /* PortEntry.swift in Sources */,
+				0B6A518411A7500E49A02344 /* PortMonitor.swift in Sources */,
+				BF25FA15307BD7EA6D2689AD /* ProcessInspector.swift in Sources */,
+				C4F1DDDFD9D022365B60FD53 /* ProcessUtils.swift in Sources */,
+				07166CDDAE2E197FC84BA488 /* ServiceClassifier.swift in Sources */,
+				E8B4C7B757079C931D95F6D4 /* SettingsStore.swift in Sources */,
+				3F75F05B91FC2E5A3996C13B /* SettingsView.swift in Sources */,
+				ED2B8A7B6FF8CA65DCB435F5 /* SettingsWindowController.swift in Sources */,
+				7A3A2A24C433C4B69A49427E /* main.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		722C9E6207CAE107DC85CBA2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 95B4881F4A8428C4AAA865AD /* Porticide */;
+			targetProxy = BB914633C41F5B5FA6BFD4A8 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		0F5CC35146A081D8C657EE38 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.giordanozonta.PorticideTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Porticide.app/Contents/MacOS/Porticide";
+			};
+			name = Debug;
+		};
+		3AC24479A44B00FC62FEB6BF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.giordanozonta.porticide;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		5A444552A0DEA0A82D9258D9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		C8F33CBCC7B3E36BE340F51B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.giordanozonta.porticide;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		E59190E4B595EFEF7410771F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.giordanozonta.PorticideTests;
+				SDKROOT = macosx;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Porticide.app/Contents/MacOS/Porticide";
+			};
+			name = Release;
+		};
+		F5B986632F70F5FC3DE68615 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		64281125080CE05B4053950F /* Build configuration list for PBXNativeTarget "Porticide" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3AC24479A44B00FC62FEB6BF /* Debug */,
+				C8F33CBCC7B3E36BE340F51B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		691623E4B82647384E3AAB14 /* Build configuration list for PBXNativeTarget "PorticideTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0F5CC35146A081D8C657EE38 /* Debug */,
+				E59190E4B595EFEF7410771F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		80EF2F2801150B97B9512353 /* Build configuration list for PBXProject "Porticide" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5A444552A0DEA0A82D9258D9 /* Debug */,
+				F5B986632F70F5FC3DE68615 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A48A6CFD68080CDBE138FEA1 /* Project object */;
+}
