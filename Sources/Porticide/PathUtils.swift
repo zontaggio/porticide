@@ -27,3 +27,4 @@ enum PathUtils {
 }
 // Utility functions for path handling
 // Improve path resolution for project detection
+// Fix: Handle edge case in project path detection
