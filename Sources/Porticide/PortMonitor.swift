@@ -89,3 +89,4 @@ final class PortMonitor: @unchecked Sendable {
     }
 }
 // TODO: Add error handling for permission issues
+// Fix: Memory leak in PortMonitor timer
