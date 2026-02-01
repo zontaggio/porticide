@@ -338,3 +338,4 @@ private struct PortRow: View {
     }
 }
 // Basic SwiftUI popover layout
+// Refactor: Extract common UI components
