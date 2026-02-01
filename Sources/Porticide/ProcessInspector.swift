@@ -37,3 +37,4 @@ enum ProcessInspector {
         }
     }
 }
+// Fix: Handle processes without cwd
