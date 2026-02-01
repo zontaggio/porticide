@@ -92,3 +92,4 @@ final class PortMonitor: @unchecked Sendable {
 // Fix: Memory leak in PortMonitor timer
 // Optimize lsof command execution
 // Fix: UI not updating on main thread
+// Improve port scanning performance
