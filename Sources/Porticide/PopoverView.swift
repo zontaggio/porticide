@@ -341,3 +341,4 @@ private struct PortRow: View {
 // Refactor: Extract common UI components
 // Update popover styling and animations
 // Add confirmation dialog before kill
+// Add detailed view toggle
