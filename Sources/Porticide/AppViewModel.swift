@@ -125,3 +125,4 @@ final class AppViewModel: ObservableObject {
 }
 // Fix: Race condition in process info fetching
 // Add proper error handling for permission denied
+// Add notifications for killed processes
