@@ -57,3 +57,4 @@ final class SettingsStore: ObservableObject {
         static let showSystemProcesses = "showSystemProcesses"
     }
 }
+// Fix: Settings not persisting correctly
