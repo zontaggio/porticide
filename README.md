@@ -60,4 +60,4 @@ Uses `lsof` to scan ports and parse process info. Some system processes need sud
 
 ## License
 
-MIT — see [LICENSE](LICENSE)
+MIT — see [LICENSE](LICENSE)// Update README with installation instructions
