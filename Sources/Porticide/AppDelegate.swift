@@ -68,3 +68,4 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.terminate(nil)
     }
 }
+// Add keyboard shortcuts support
