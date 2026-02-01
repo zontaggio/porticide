@@ -26,3 +26,4 @@ enum PathUtils {
     }
 }
 // Utility functions for path handling
+// Improve path resolution for project detection
