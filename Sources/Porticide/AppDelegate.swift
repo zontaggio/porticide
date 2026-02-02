@@ -18,9 +18,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     
     private func setupUI() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        statusItem?.button?.title = "Porticide"
-        statusItem?.button?.action = #selector(togglePopover)
-        statusItem?.button?.target = self
+        
+        // Use knife logo instead of text
+        if let button = statusItem?.button {
+            if let logoURL = Bundle.main.url(forResource: "knife", withExtension: "svg", subdirectory: "assets"),
+               let logoImage = NSImage(contentsOf: logoURL) {
+                logoImage.size = NSSize(width: 18, height: 18)
+                logoImage.isTemplate = true
+                button.image = logoImage
+            } else {
+                button.title = "🔪"
+            }
+            button.action = #selector(togglePopover)
+            button.target = self
+        }
 
         let viewModel = AppViewModel(settings: settings, monitor: monitor, onOpenSettings: { [weak self] in
             self?.openSettings()

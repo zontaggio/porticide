@@ -8,6 +8,8 @@
 
 Kill local dev servers from your menu bar. No more terminal archaeology.
 
+> **⚠️ MVP Status**: This is a working MVP built quickly to solve a personal need. It works but hasn't been polished or extensively tested. Use at your own risk.
+
 ## Why
 
 Running multiple projects locally gets messy fast. You've got Vite on 5173, Streamlit on 8501, Next.js on 3000, some Flask API you forgot about still holding port 5000. Your Mac fans are screaming, Docker containers are piling up, and you just want to start fresh without hunting through `ps aux` or memorizing PIDs.
