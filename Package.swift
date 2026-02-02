@@ -10,7 +10,11 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "Porticide"
+            name: "Porticide",
+            path: "Sources/Porticide",
+            resources: [
+                .copy("assets")
+            ]
         ),
         .testTarget(
             name: "PorticideTests",

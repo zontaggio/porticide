@@ -21,25 +21,19 @@ struct PopoverView: View {
     // MARK: - Header
     private var header: some View {
         HStack(alignment: .center, spacing: 12) {
-            // App icon
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [.blue, .purple],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 36, height: 36)
-                Image(systemName: "network")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.white)
+            // App logo
+            if let logoURL = Bundle.main.url(forResource: "knife", withExtension: "svg", subdirectory: "assets"),
+               let logoImage = NSImage(contentsOf: logoURL) {
+                Image(nsImage: logoImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 32, height: 32)
+            } else {
+                Text("🔪")
+                    .font(.system(size: 24))
             }
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Porticide")
-                    .font(.system(size: 15, weight: .semibold))
                 HStack(spacing: 4) {
                     Text("Ports \(String(viewModel.portStart))–\(String(viewModel.portEnd))")
                         .font(.system(size: 11))
