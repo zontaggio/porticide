@@ -2,10 +2,13 @@ import Foundation
 
 /// Lists processes listening on local ports and resolves what they are.
 public struct PortScanner: Sendable {
+    /// Numeric hosts and ports (`-nP`), listening TCP and all UDP sockets, machine-readable fields.
+    static let lsofArguments = ["-nP", "-iTCP", "-sTCP:LISTEN", "-iUDP", "-F", "cLPn"]
+
     public init() {}
 
     public func scan(portRange: ClosedRange<Int>) -> [PortEntry] {
-        let output = CommandRunner.run("/usr/sbin/lsof", arguments: ["-n", "-P", "-iTCP", "-sTCP:LISTEN", "-iUDP"])
+        let output = CommandRunner.run("/usr/sbin/lsof", arguments: Self.lsofArguments)
         return LsofParser.parse(output, portRange: portRange)
             .map(enrich)
             .sorted { $0.port < $1.port }
