@@ -12,6 +12,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private let popover = NSPopover()
     private var settingsWindow: SettingsWindowController?
+    private lazy var statusMenu = StatusMenu(
+        viewModel: viewModel,
+        settings: settings,
+        showPopover: { [weak self] in self?.showPopover() },
+        openSettings: { [weak self] in self?.openSettings() }
+    )
     private var cancellables: Set<AnyCancellable> = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -37,8 +43,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
             button.image = MenuBarIcon.image
-            button.action = #selector(togglePopover)
+            button.action = #selector(statusItemClicked)
             button.target = self
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
         self.statusItem = statusItem
     }
@@ -51,15 +58,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             : NSAttributedString()
     }
 
-    @objc private func togglePopover() {
-        guard let button = statusItem?.button else { return }
-        if popover.isShown {
+    /// Left click toggles the popover; right-click or Control-click opens the menu.
+    @objc private func statusItemClicked() {
+        let event = NSApp.currentEvent
+        if event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true {
+            showMenu()
+        } else if popover.isShown {
             popover.performClose(nil)
         } else {
-            viewModel.refresh()
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
+            showPopover()
         }
+    }
+
+    private func showPopover() {
+        guard let button = statusItem?.button, !popover.isShown else { return }
+        viewModel.refresh()
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        popover.contentViewController?.view.window?.makeKey()
+    }
+
+    private func showMenu() {
+        guard let statusItem, let button = statusItem.button else { return }
+        popover.performClose(nil)
+        // Attaching the menu only for this click keeps left click free for the popover,
+        // while macOS still positions and highlights the menu like any menu extra.
+        statusItem.menu = statusMenu.makeMenu()
+        button.performClick(nil)
+        statusItem.menu = nil
     }
 
     private func openSettings() {
