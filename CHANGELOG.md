@@ -6,6 +6,12 @@ All notable changes to Porticide are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-09-25
+
+### Fixed
+
+- Rows no longer shift sideways while a stopped process animates away or when hovering a row.
+
 ## [1.1.0] - 2026-09-25
 
 ### Added
@@ -48,6 +54,7 @@ All notable changes to Porticide are documented here. The format follows
 - One-click kill with optional confirmation.
 - Settings for port range, refresh interval and showing system processes.
 
-[Unreleased]: https://github.com/zontaggio/porticide/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/zontaggio/porticide/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/zontaggio/porticide/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/zontaggio/porticide/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/zontaggio/porticide/releases/tag/v1.0.0
