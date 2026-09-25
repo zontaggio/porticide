@@ -11,7 +11,7 @@ struct ServiceIcon: View {
         shape
             .fill(
                 LinearGradient(
-                    colors: [kind.brandColor.mix(with: .white, by: 0.18), kind.brandColor],
+                    colors: [kind.brandColor.blended(with: .white, fraction: 0.18), kind.brandColor],
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -45,8 +45,8 @@ struct ServiceIcon: View {
 }
 
 extension Color {
-    /// Linear blend towards `other`, available on macOS 13 (unlike `Color.mix(with:by:)`).
-    func mix(with other: Color, by fraction: Double) -> Color {
+    /// Linear blend towards `other` in sRGB (`Color.mix` needs macOS 15).
+    func blended(with other: Color, fraction: Double) -> Color {
         let base = NSColor(self).usingColorSpace(.sRGB) ?? .gray
         let target = NSColor(other).usingColorSpace(.sRGB) ?? .white
         return Color(nsColor: base.blended(withFraction: fraction, of: target) ?? base)
