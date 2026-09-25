@@ -14,11 +14,14 @@ struct PortRowActions {
 struct PortRow: View {
     let entry: PortEntry
     let showCommandLine: Bool
+    /// Stopping takes a second click on the armed button.
+    let asksBeforeStopping: Bool
     /// 0 while the process is running; animates to 1 once it has been stopped.
     let stopProgress: Double
     let actions: PortRowActions
 
     @State private var isHovered = false
+    @State private var isArmed = false
 
     private var isStopping: Bool { stopProgress > 0 }
 
@@ -125,21 +128,43 @@ struct PortRow: View {
         HStack(spacing: 4) {
             // The slot is always laid out so the port column never shifts on hover.
             RowIconButton(systemImage: "safari", help: "Open http://localhost:\(entry.port)", action: actions.openInBrowser)
-                .opacity(isHovered && entry.service.kind.speaksHTTP ? 1 : 0)
-                .disabled(!entry.service.kind.speaksHTTP || isStopping)
+                .opacity(isHovered && !isArmed && entry.service.kind.speaksHTTP ? 1 : 0)
+                .disabled(!entry.service.kind.speaksHTTP || isStopping || isArmed)
                 .accessibilityHidden(!entry.service.kind.speaksHTTP)
 
             portLabel
+                // The armed "Stop" button covers the port without changing the layout.
+                .overlay(alignment: .trailing) {
+                    if isArmed {
+                        ConfirmStopButton(title: "Stop") {
+                            isArmed = false
+                            actions.stop(NSEvent.modifierFlags.contains(.option))
+                        }
+                        .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .trailing)))
+                    }
+                }
 
             RowIconButton(
-                systemImage: "xmark.circle.fill",
-                help: "Stop (⌥-click to force quit)",
-                tint: isHovered ? .red : Color.secondary.opacity(0.55),
-                size: 15
+                systemImage: isArmed ? "xmark" : "xmark.circle.fill",
+                help: isArmed ? "Cancel" : "Stop (⌥-click to force quit)",
+                tint: isHovered && !isArmed ? .red : Color.secondary.opacity(0.55),
+                size: isArmed ? 11 : 15
             ) {
-                actions.stop(NSEvent.modifierFlags.contains(.option))
+                if isArmed {
+                    withAnimation(.easeOut(duration: 0.15)) { isArmed = false }
+                } else if asksBeforeStopping {
+                    withAnimation(.easeOut(duration: 0.15)) { isArmed = true }
+                } else {
+                    actions.stop(NSEvent.modifierFlags.contains(.option))
+                }
             }
             .disabled(isStopping)
+        }
+        .onChange(of: isHovered) { hovering in
+            // Leaving the row disarms it, so a stray click later can't stop anything.
+            if !hovering, isArmed {
+                withAnimation(.easeOut(duration: 0.15)) { isArmed = false }
+            }
         }
     }
 
@@ -180,6 +205,26 @@ struct PortRow: View {
         Divider()
         Button("Stop") { actions.stop(false) }
         Button("Force Quit") { actions.stop(true) }
+    }
+}
+
+/// The red capsule that confirms a stop when "Ask before stopping" is on.
+struct ConfirmStopButton: View {
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 11, weight: .bold))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10)
+                .frame(height: 20)
+                .background(Capsule().fill(Color.red))
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .help("Click to stop")
     }
 }
 

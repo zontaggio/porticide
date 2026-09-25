@@ -13,6 +13,8 @@ final class PortListViewModel: ObservableObject {
     @Published private(set) var isScanning = true
     /// When each stopped entry started its exit animation.
     @Published private(set) var stopStarts: [PortEntry.ID: Date] = [:]
+    /// A message shown inside the popover (never a modal alert, which would close it).
+    @Published private(set) var notice: Notice?
 
     let settings: SettingsStore
     var portRange: ClosedRange<Int> { settings.portRange }
@@ -25,6 +27,9 @@ final class PortListViewModel: ObservableObject {
     private var allEntries: [PortEntry] = []
     /// Entries already animated away, hidden until a scan confirms they're gone.
     private var dismissed: [PortEntry.ID: Date] = [:]
+    /// Recently stopped processes by port, to notice when something restarts them.
+    private var recentlyStopped: [Int: (entry: PortEntry, at: Date)] = [:]
+    private var noticeDismissal: Task<Void, Never>?
     private var cancellables: Set<AnyCancellable> = []
 
     init(settings: SettingsStore, notifier: KillNotifier?, onOpenSettings: @escaping () -> Void) {
@@ -95,7 +100,50 @@ final class PortListViewModel: ObservableObject {
     private func receive(_ entries: [PortEntry]) {
         allEntries = entries
         isScanning = false
+        detectRestarts(in: entries)
         applyFilter()
+    }
+
+    /// A stopped server that reappears on its port within seconds, under a new PID, is
+    /// being restarted by a supervisor (nodemon, pm2, a shell loop…). Say so, and offer
+    /// to stop the supervisor instead.
+    private func detectRestarts(in entries: [PortEntry]) {
+        let now = Date()
+        recentlyStopped = recentlyStopped.filter { now.timeIntervalSince($0.value.at) < 15 }
+        for entry in entries {
+            guard let stopped = recentlyStopped[entry.port],
+                  stopped.entry.processName == entry.processName,
+                  stopped.entry.pid != entry.pid else { continue }
+            recentlyStopped[entry.port] = nil
+
+            let name = entry.service.displayName
+            if let parent = ProcessInspector.parent(of: entry.pid), parent.pid > 1, !parent.name.isEmpty {
+                show(Notice(
+                    style: .info,
+                    title: "\(name) restarted on :\(entry.port)",
+                    message: "\(parent.name) (PID \(parent.pid)) brought it back.",
+                    action: Notice.Action(title: "Stop \(parent.name)") { [weak self] in
+                        self?.stopSupervisor(pid: parent.pid, name: parent.name)
+                    }
+                ))
+            } else {
+                show(Notice(
+                    style: .info,
+                    title: "\(name) restarted on :\(entry.port)",
+                    message: "Something outside Porticide keeps it running."
+                ))
+            }
+        }
+    }
+
+    private func stopSupervisor(pid: Int32, name: String) {
+        do throws(ProcessKiller.Failure) {
+            try ProcessKiller.terminate(pid: pid, force: false)
+            dismissNotice()
+            monitor.refresh()
+        } catch {
+            show(Notice(style: .warning, title: "Couldn't stop \(name)", message: Self.describe(error, pid: pid)))
+        }
     }
 
     private func applyFilter() {
@@ -123,29 +171,19 @@ final class PortListViewModel: ObservableObject {
 
     // MARK: - Stopping
 
+    /// Stops right away. When "Ask before stopping" is on, the row and the Stop All
+    /// button ask for a second click inline before calling this.
     func stop(_ entry: PortEntry, force: Bool) {
-        guard stopStarts[entry.id] == nil else { return }
-        if settings.confirmBeforeKill {
-            let title = force ? "Force quit \(entry.service.displayName)?" : "Stop \(entry.service.displayName)?"
-            guard confirm(title, detail: "PID \(entry.pid) on port \(entry.port).", button: force ? "Force Quit" : "Stop") else { return }
-        }
         terminate([entry], force: force)
     }
 
     func stopAll() {
-        let targets = entries.filter { stopStarts[$0.id] == nil }
-        guard !targets.isEmpty else { return }
-        if settings.confirmBeforeKill {
-            let list = targets.map { "\($0.service.displayName) on :\($0.port)" }.joined(separator: "\n")
-            guard confirm("Stop \(targets.count) processes?", detail: list, button: "Stop All") else { return }
-        }
-        terminate(targets, force: false)
+        terminate(entries, force: false)
     }
 
     /// Starts the exit animation right away and stops the processes in the background;
     /// rows whose process couldn't be stopped snap back.
     private func terminate(_ targets: [PortEntry], force: Bool) {
-        // A row may have started stopping while a confirmation dialog was open.
         let targets = targets.filter { stopStarts[$0.id] == nil }
         guard !targets.isEmpty else { return }
         animateStop(targets)
@@ -166,6 +204,9 @@ final class PortListViewModel: ObservableObject {
 
             for (entry, _) in failures {
                 stopStarts[entry.id] = nil
+            }
+            for entry in stopped where entry.launchdLabel == nil {
+                recentlyStopped[entry.port] = (entry, Date())
             }
             if settings.showNotifications {
                 notifier?.notifyStopped(stopped)
@@ -237,38 +278,43 @@ final class PortListViewModel: ObservableObject {
         NSPasteboard.general.setString(string, forType: .string)
     }
 
-    // MARK: - Alerts
+    // MARK: - Notices
 
-    private func confirm(_ title: String, detail: String, button: String) -> Bool {
-        let alert = NSAlert()
-        alert.messageText = title
-        alert.informativeText = detail
-        alert.addButton(withTitle: button)
-        alert.addButton(withTitle: "Cancel")
-        NSApp.activate(ignoringOtherApps: true)
-        return alert.runModal() == .alertFirstButtonReturn
+    func dismissNotice() {
+        noticeDismissal?.cancel()
+        notice = nil
+    }
+
+    private func show(_ notice: Notice) {
+        self.notice = notice
+        noticeDismissal?.cancel()
+        noticeDismissal = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(8))
+            guard !Task.isCancelled else { return }
+            self?.notice = nil
+        }
     }
 
     private func showFailures(_ failures: [(PortEntry, ProcessKiller.Failure)]) {
-        let alert = NSAlert()
-        alert.alertStyle = .warning
-        alert.messageText = failures.count == 1
-            ? "Couldn't stop \(failures[0].0.service.displayName)"
+        guard let (entry, failure) = failures.first else { return }
+        let title = failures.count == 1
+            ? "Couldn't stop \(entry.service.displayName)"
             : "Couldn't stop \(failures.count) processes"
-        alert.informativeText = failures.map { entry, failure in
-            switch failure {
-            case .permissionDenied:
-                "PID \(entry.pid) belongs to another user. Run `sudo kill \(entry.pid)` in Terminal."
-            case .notFound:
-                "PID \(entry.pid) already exited."
-            case .serviceControl(let message):
-                "launchd couldn't stop \(entry.launchdLabel ?? "the service"): \(message)"
-            case .other(let code):
-                "PID \(entry.pid): \(String(cString: strerror(code)))."
-            }
-        }.joined(separator: "\n")
-        NSApp.activate(ignoringOtherApps: true)
-        alert.runModal()
+        var action: Notice.Action?
+        if case .permissionDenied = failure {
+            let command = "sudo kill \(failures.map { String($0.0.pid) }.joined(separator: " "))"
+            action = Notice.Action(title: "Copy “\(command)”") { Self.copy(command) }
+        }
+        show(Notice(style: .warning, title: title, message: Self.describe(failure, pid: entry.pid), action: action))
+    }
+
+    private static func describe(_ failure: ProcessKiller.Failure, pid: Int32) -> String {
+        switch failure {
+        case .permissionDenied: "It belongs to another user, so it needs sudo."
+        case .notFound: "PID \(pid) already exited."
+        case .serviceControl(let message): "launchd refused: \(message)"
+        case .other(let code): String(cString: strerror(code))
+        }
     }
 }
 

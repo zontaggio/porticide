@@ -8,7 +8,8 @@ final class SettingsStore: ObservableObject {
     @Published var portStart: Int { didSet { defaults.set(portStart, forKey: Keys.portStart) } }
     @Published var portEnd: Int { didSet { defaults.set(portEnd, forKey: Keys.portEnd) } }
     @Published var refreshInterval: TimeInterval { didSet { defaults.set(refreshInterval, forKey: Keys.refreshInterval) } }
-    @Published var confirmBeforeKill: Bool { didSet { defaults.set(confirmBeforeKill, forKey: Keys.confirmBeforeKill) } }
+    /// Off by default: Porticide is a one-click tool. When on, stopping takes a second click.
+    @Published var askBeforeStopping: Bool { didSet { defaults.set(askBeforeStopping, forKey: Keys.askBeforeStopping) } }
     @Published var showNotifications: Bool { didSet { defaults.set(showNotifications, forKey: Keys.showNotifications) } }
     @Published var showCommandLines: Bool { didSet { defaults.set(showCommandLines, forKey: Keys.showCommandLines) } }
     @Published var showCountInMenuBar: Bool { didSet { defaults.set(showCountInMenuBar, forKey: Keys.showCountInMenuBar) } }
@@ -28,7 +29,7 @@ final class SettingsStore: ObservableObject {
         portStart = defaults.object(forKey: Keys.portStart) as? Int ?? 3000
         portEnd = defaults.object(forKey: Keys.portEnd) as? Int ?? 9999
         refreshInterval = defaults.object(forKey: Keys.refreshInterval) as? Double ?? 3.0
-        confirmBeforeKill = defaults.object(forKey: Keys.confirmBeforeKill) as? Bool ?? true
+        askBeforeStopping = defaults.object(forKey: Keys.askBeforeStopping) as? Bool ?? false
         showNotifications = defaults.object(forKey: Keys.showNotifications) as? Bool ?? false
         showCommandLines = defaults.object(forKey: Keys.showCommandLines) as? Bool ?? false
         showCountInMenuBar = defaults.object(forKey: Keys.showCountInMenuBar) as? Bool ?? true
@@ -40,7 +41,9 @@ final class SettingsStore: ObservableObject {
         static let portStart = "portStart"
         static let portEnd = "portEnd"
         static let refreshInterval = "refreshInterval"
-        static let confirmBeforeKill = "confirmBeforeKill"
+        // A new key: 1.x stored "confirmBeforeKill" = true for everyone, which would keep
+        // the old modal confirmation on for existing users.
+        static let askBeforeStopping = "askBeforeStopping"
         static let showNotifications = "showNotifications"
         static let showCommandLines = "showDetailed" // Kept from 1.0 so existing preferences carry over.
         static let showCountInMenuBar = "showCountInMenuBar"

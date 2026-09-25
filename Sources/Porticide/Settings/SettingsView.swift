@@ -32,8 +32,8 @@ struct SettingsView: View {
                     .settingsFootnote()
             }
 
-            Section("Stopping") {
-                Toggle("Ask before stopping", isOn: $settings.confirmBeforeKill)
+            Section {
+                Toggle("Ask before stopping", isOn: $settings.askBeforeStopping)
                 Toggle("Play a sound", isOn: $settings.playSounds)
                 Toggle("Notify when a process is stopped", isOn: $settings.showNotifications)
                     .disabled(!KillNotifier.isAvailable)
@@ -46,6 +46,11 @@ struct SettingsView: View {
                             }
                         }
                     }
+            } header: {
+                Text("Stopping")
+            } footer: {
+                Text("When asking is on, the first click arms the button and a second click stops the process.")
+                    .settingsFootnote()
             }
 
             Section {

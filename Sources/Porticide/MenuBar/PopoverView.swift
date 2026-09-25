@@ -10,10 +10,16 @@ struct PopoverView: View {
             header
             Divider().padding(.horizontal, 12)
             content
+            if let notice = viewModel.notice {
+                NoticeBanner(notice: notice, onDismiss: viewModel.dismissNotice)
+                    .id(notice.id)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
             Divider().padding(.horizontal, 12)
             footer
         }
         .frame(width: 348)
+        .animation(.spring(response: 0.3, dampingFraction: 0.9), value: viewModel.notice?.id)
         .tint(Brand.teal)
         .background(shortcuts)
     }
@@ -71,6 +77,7 @@ struct PopoverView: View {
                             PortRow(
                                 entry: entry,
                                 showCommandLine: settings.showCommandLines,
+                                asksBeforeStopping: settings.askBeforeStopping,
                                 stopProgress: viewModel.stopProgress(for: entry.id, at: timeline.date),
                                 actions: viewModel.actions(for: entry)
                             )
@@ -100,13 +107,11 @@ struct PopoverView: View {
                 .font(.system(size: 11))
                 .foregroundStyle(.tertiary)
             Spacer()
-            Button {
-                viewModel.stopAll()
-            } label: {
-                Label("Stop All", systemImage: "xmark.circle")
-            }
-            .buttonStyle(StopAllButtonStyle())
-            .disabled(viewModel.entries.isEmpty)
+            StopAllButton(
+                count: viewModel.entries.count - viewModel.stopStarts.count,
+                asksBeforeStopping: settings.askBeforeStopping,
+                action: viewModel.stopAll
+            )
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
@@ -188,21 +193,50 @@ private struct OptionsMenu: View {
     }
 }
 
-private struct StopAllButtonStyle: ButtonStyle {
-    @Environment(\.isEnabled) private var isEnabled
-    @State private var isHovered = false
+/// "Stop All", which arms itself for a few seconds when "Ask before stopping" is on.
+private struct StopAllButton: View {
+    let count: Int
+    let asksBeforeStopping: Bool
+    let action: () -> Void
 
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(isEnabled ? Color.red : Color.secondary.opacity(0.5))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(
-                Capsule().fill(Color.red.opacity(isEnabled ? (configuration.isPressed ? 0.24 : isHovered ? 0.16 : 0.1) : 0.04))
-            )
-            .onHover { isHovered = $0 }
-            .animation(.easeOut(duration: 0.12), value: isHovered)
+    @State private var isArmed = false
+    @State private var isHovered = false
+    @State private var disarm: Task<Void, Never>?
+
+    var body: some View {
+        Button {
+            if asksBeforeStopping && !isArmed {
+                arm()
+            } else {
+                isArmed = false
+                action()
+            }
+        } label: {
+            Label(isArmed ? "Stop \(count)?" : "Stop All", systemImage: isArmed ? "exclamationmark.circle.fill" : "xmark.circle")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(isArmed ? Color.white : count > 0 ? Color.red : Color.secondary.opacity(0.5))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule().fill(Color.red.opacity(isArmed ? 1 : count > 0 ? (isHovered ? 0.16 : 0.1) : 0.04))
+                )
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .disabled(count == 0)
+        .onHover { isHovered = $0 }
+        .animation(.easeOut(duration: 0.15), value: isArmed)
+        .animation(.easeOut(duration: 0.12), value: isHovered)
+    }
+
+    private func arm() {
+        isArmed = true
+        disarm?.cancel()
+        disarm = Task {
+            try? await Task.sleep(for: .seconds(3))
+            guard !Task.isCancelled else { return }
+            isArmed = false
+        }
     }
 }
 
