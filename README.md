@@ -34,12 +34,13 @@ Porticide lives in the menu bar, shows every dev server that's listening, tells 
 
 ## Features
 
-- **Knows your stack.** Recognises 38 dev servers, databases and tools (Vite, Next.js, Django, FastAPI, Rails, PostgreSQL, Redis, Docker, Ollama and more) and shows each one's logo, version and project folder.
+- **Knows your stack.** Recognises 38 dev servers, databases and tools (Vite, Next.js, Django, FastAPI, Rails, PostgreSQL, Redis, Ollama and more) and shows each one's logo, version and project folder.
+- **Sees inside Docker.** Ports published by containers on OrbStack, Docker Desktop, Colima or Podman show up under their Compose project, with the container's name and image. Stopping one runs `docker stop` on that container only.
 - **One click to stop, and it stays stopped.** Sends `SIGTERM` (<kbd>⌥</kbd>-click for `SIGKILL`). Services kept alive by launchd, like `brew services` or background gateways, are stopped through `launchctl` so they don't come back 10 seconds later. If something else restarts a server (nodemon, pm2…), Porticide names it and offers to stop it too.
 - **Never in your way.** No dialogs: confirmations (off by default) and errors appear inline, so the popover stays open. If a process belongs to another user, you get the exact `sudo kill` command to copy.
 - **Only what matters.** macOS services (AirPlay Receiver on 5000/7000, Control Center…), app helpers and shared Bonjour sockets are hidden by default. Servers are grouped into *Dev Servers*, *Databases* and *Services*.
 - **Handy shortcuts.** Open `localhost:<port>` in the browser, reveal the project in Finder, open it in Terminal, copy the URL or PID.
-- **Quietly native.** SwiftUI and AppKit, no dependencies. Shows the busy-port count in the menu bar, can open at login and can notify you when a process stops.
+- **Feels native.** SwiftUI and AppKit, no dependencies. A right-click menu on the menu bar icon, the busy-port count next to it, trackpad haptics in time with the stop animation, open at login and optional notifications.
 - **Light on resources.** One `lsof` call per scan; everything else is read straight from the kernel with `libproc` and `sysctl`, and cached per process.
 
 <p align="center">
@@ -78,6 +79,7 @@ make install    # builds Porticide.app and copies it to /Applications
 | Force quit (`SIGKILL`) | <kbd>⌥</kbd>-click <kbd>⊗</kbd>, or right-click → **Force Quit** |
 | Open in the browser | Hover a row and click the Safari icon |
 | More actions | Right-click a row |
+| Quick menu | Right-click the menu bar icon: every busy port with its actions, Stop All, settings, About |
 | Refresh / Settings / Quit | <kbd>⌘R</kbd> / <kbd>⌘,</kbd> / <kbd>⌘Q</kbd> while the popover is open |
 
 Settings let you change the scanned port range (3000–9999 by default), the refresh interval, whether to ask before stopping, sounds, notifications and whether system processes are shown.
@@ -92,6 +94,7 @@ flowchart LR
     scanner --> classifier[ServiceClassifier]
     scanner --> locator["ProjectLocator<br/>(nearest git root)"]
     launchd["launchctl list"] --> scanner
+    docker["docker ps<br/>(only if a runtime holds a port)"] --> scanner
     scanner --> filter[PortFilter]
     filter --> ui["Menu bar popover<br/>(SwiftUI)"]
 ```
@@ -100,7 +103,8 @@ flowchart LR
 2. **Inspect.** For each new PID, the executable path (`proc_pidpath`), working directory (`proc_pidinfo`) and arguments (`sysctl(KERN_PROCARGS2)`) come straight from the kernel, with no `ps` or extra `lsof` per process. The project is the nearest git root above the working directory, worktrees included.
 3. **Classify.** Rules match the *file names* of the executable and its arguments (`node …/.bin/vite` → Vite), so `bundle exec` is never mistaken for Bun. Unknown processes get a hint from well-known ports (`5173` → *usually Vite*).
 4. **Filter.** Other users' processes, macOS system paths, app helpers and multicast DNS sockets are hidden; Homebrew services such as PostgreSQL stay visible.
-5. **Stop.** Plain processes get a signal. Processes that `launchctl list` attributes to a LaunchAgent are booted out of launchd instead, since `KeepAlive` would restart them.
+5. **Containers.** On macOS a container's published port is held by the runtime (OrbStack, Docker Desktop…), not by the container. When a runtime owns a port, `docker ps` tells which container published it.
+6. **Stop.** Plain processes get a signal. Containers get `docker stop`, since killing the runtime would stop them all. Processes that `launchctl list` attributes to a LaunchAgent are booted out of launchd, since `KeepAlive` would restart them.
 
 ### Project structure
 
