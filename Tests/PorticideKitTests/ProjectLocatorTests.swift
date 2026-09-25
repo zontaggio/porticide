@@ -12,6 +12,15 @@ struct ProjectLocatorTests {
         #expect(ProjectLocator.projectRoot(for: "\(root)/apps/web") == root)
     }
 
+    @Test func recognisesWorktreesWhereGitIsAFile() throws {
+        let worktree = try makeTemporaryDirectory()
+        defer { try? FileManager.default.removeItem(atPath: worktree) }
+        FileManager.default.createFile(atPath: "\(worktree)/.git", contents: Data("gitdir: /elsewhere".utf8))
+        try FileManager.default.createDirectory(atPath: "\(worktree)/src", withIntermediateDirectories: true)
+
+        #expect(ProjectLocator.projectRoot(for: "\(worktree)/src") == worktree)
+    }
+
     @Test func fallsBackToWorkingDirectoryOutsideRepositories() throws {
         let directory = try makeTemporaryDirectory()
         defer { try? FileManager.default.removeItem(atPath: directory) }
