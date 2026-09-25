@@ -36,7 +36,7 @@ struct PopoverView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
-                    Text("Ports \(String(viewModel.portStart))–\(String(viewModel.portEnd))")
+                    Text(verbatim: "Ports \(viewModel.portRange.lowerBound)–\(viewModel.portRange.upperBound)")
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                     Text("•")

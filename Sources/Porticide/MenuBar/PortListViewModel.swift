@@ -9,8 +9,7 @@ final class PortListViewModel: ObservableObject {
     @Published var lastUpdated: Date = Date()
     private var rawEntries: [PortEntry] = []
 
-    var portStart: Int { settings.portStart }
-    var portEnd: Int { settings.portEnd }
+    var portRange: ClosedRange<Int> { settings.portRange }
 
     private let settings: SettingsStore
     private let monitor: PortMonitor

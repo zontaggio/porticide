@@ -1,5 +1,6 @@
-import Foundation
 import Combine
+import Foundation
+import PorticideKit
 
 final class SettingsStore: ObservableObject {
     @Published var portStart: Int { didSet { persist(); onChange?() } }
@@ -12,6 +13,12 @@ final class SettingsStore: ObservableObject {
     @Published var showSystemProcesses: Bool { didSet { persist(); onChange?() } }
 
     var onChange: (() -> Void)?
+
+    /// The range to scan. Safe to use even while the user is mid-edit with start > end.
+    var portRange: ClosedRange<Int> { PortRange.normalized(portStart, portEnd) }
+
+    /// Never poll faster than once a second, whatever is stored.
+    var effectiveRefreshInterval: TimeInterval { max(refreshInterval, 1) }
 
     private let defaults = UserDefaults.standard
 

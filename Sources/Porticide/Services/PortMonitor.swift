@@ -25,7 +25,7 @@ final class PortMonitor: @unchecked Sendable {
     }
 
     func refresh() {
-        let range = settings.portStart...settings.portEnd
+        let range = settings.portRange
         queue.async { [weak self] in
             guard let self else { return }
             let entries = self.scanner.scan(portRange: range)
@@ -37,7 +37,7 @@ final class PortMonitor: @unchecked Sendable {
 
     private func scheduleTimer() {
         let timer = DispatchSource.makeTimerSource(queue: queue)
-        timer.schedule(deadline: .now() + 0.1, repeating: settings.refreshInterval)
+        timer.schedule(deadline: .now() + 0.1, repeating: settings.effectiveRefreshInterval)
         timer.setEventHandler { [weak self] in
             self?.refresh()
         }
