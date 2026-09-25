@@ -20,7 +20,13 @@ final class KillNotifier: NSObject {
     /// Asks for permission the first time; returns whether notifications are allowed.
     func requestAuthorization() async -> Bool {
         guard let center else { return false }
-        return (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
+        // The completion-handler API keeps `center` on the main actor; the async
+        // variant would send it across isolation domains.
+        return await withCheckedContinuation { continuation in
+            center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+                continuation.resume(returning: granted)
+            }
+        }
     }
 
     func notifyStopped(_ entries: [PortEntry]) {
