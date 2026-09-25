@@ -6,6 +6,18 @@ All notable changes to Porticide are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-25
+
+### Added
+
+- Docker containers: ports published through OrbStack, Docker Desktop, Colima or Podman show the container's name and image, grouped by Compose project, with the right logo for known images. Stop runs `docker stop`, Force Quit runs `docker kill`.
+- Right-click menu on the menu bar icon listing every busy port with its actions, plus Stop All, Refresh, settings toggles, About and Quit.
+- Trackpad haptics timed to the stop animation, with a setting to turn them off.
+
+### Fixed
+
+- OrbStack was treated as a system process, hiding every container port.
+
 ## [1.2.0] - 2026-09-25
 
 ### Added
@@ -72,7 +84,8 @@ All notable changes to Porticide are documented here. The format follows
 - One-click kill with optional confirmation.
 - Settings for port range, refresh interval and showing system processes.
 
-[Unreleased]: https://github.com/zontaggio/porticide/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/zontaggio/porticide/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/zontaggio/porticide/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/zontaggio/porticide/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/zontaggio/porticide/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/zontaggio/porticide/compare/v1.0.0...v1.1.0
