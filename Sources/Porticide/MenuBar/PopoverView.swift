@@ -69,9 +69,9 @@ struct PopoverView: View {
             ScrollView {
                 TimelineView(.animation(minimumInterval: nil, paused: !viewModel.isAnimatingStops)) { timeline in
                 VStack(alignment: .leading, spacing: 2) {
-                    ForEach(viewModel.sections, id: \.category) { section in
+                    ForEach(viewModel.sections) { section in
                         if viewModel.sections.count > 1 {
-                            SectionHeader(title: section.category.title)
+                            SectionHeader(title: section.title, showsContainerIcon: section.isContainerGroup)
                         }
                         ForEach(section.entries) { entry in
                             PortRow(
@@ -134,15 +134,22 @@ struct PopoverView: View {
 
 private struct SectionHeader: View {
     let title: String
+    var showsContainerIcon = false
 
     var body: some View {
-        Text(title.uppercased())
-            .font(.system(size: 10, weight: .semibold))
-            .tracking(0.6)
-            .foregroundStyle(.tertiary)
-            .padding(.horizontal, 10)
-            .padding(.top, 8)
-            .padding(.bottom, 2)
+        HStack(spacing: 4) {
+            if showsContainerIcon {
+                Image(systemName: "shippingbox.fill")
+                    .font(.system(size: 9))
+            }
+            Text(title.uppercased())
+                .font(.system(size: 10, weight: .semibold))
+                .tracking(0.6)
+        }
+        .foregroundStyle(.tertiary)
+        .padding(.horizontal, 10)
+        .padding(.top, 8)
+        .padding(.bottom, 2)
     }
 }
 

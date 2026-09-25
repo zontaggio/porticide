@@ -24,6 +24,13 @@ public actor PortScanner {
         async let launchdJobs = LaunchdJobs.running()
         let sockets = LsofParser.parse(await lsof.stdout, portRange: portRange)
         let jobs = await launchdJobs
+        // Only ask Docker when a container runtime actually holds one of the ports.
+        var containersByPort: [Int: Container] = [:]
+        if sockets.contains(where: { Containers.isRuntime($0.processName) }) {
+            for container in await Containers.running() {
+                for port in container.publishedPorts { containersByPort[port] = container }
+            }
+        }
 
         let livePIDs = Set(sockets.map(\.pid))
         cache = cache.filter { livePIDs.contains($0.key) }
@@ -31,13 +38,15 @@ public actor PortScanner {
         return sockets
             .map { socket in
                 let details = details(for: socket)
+                let container = Containers.isRuntime(socket.processName) ? containersByPort[socket.port] : nil
                 return PortEntry(
                     socket: socket,
                     executablePath: details.executablePath,
                     commandLine: details.commandLine,
                     projectPath: details.projectPath,
-                    service: details.service,
-                    launchdLabel: jobs[socket.pid]
+                    service: container.map(ServiceClassifier.classify(container:)) ?? details.service,
+                    launchdLabel: jobs[socket.pid],
+                    container: container
                 )
             }
             .sorted { ($0.port, $0.socket.transport == .tcp ? 0 : 1) < ($1.port, $1.socket.transport == .tcp ? 0 : 1) }

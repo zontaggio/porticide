@@ -9,6 +9,7 @@ struct PortRowActions {
     var revealProject: () -> Void
     var openTerminal: () -> Void
     var copyPID: () -> Void
+    var copyContainerID: () -> Void
 }
 
 struct PortRow: View {
@@ -63,7 +64,8 @@ struct PortRow: View {
                 Text(entry.service.displayName)
                     .font(.system(size: 13, weight: .semibold))
                     .lineLimit(1)
-                if let detail = entry.service.detail {
+                // A container's image is already in its subtitle.
+                if entry.container == nil, let detail = entry.service.detail {
                     Text(detail)
                         .font(.system(size: 10, weight: .medium, design: .rounded))
                         .foregroundStyle(.secondary)
@@ -72,7 +74,12 @@ struct PortRow: View {
                         .background(Color.primary.opacity(0.07), in: Capsule())
                         .lineLimit(1)
                 }
-                if let label = entry.launchdLabel {
+                if entry.container != nil {
+                    Image(systemName: "shippingbox.fill")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .help("Container on \(Self.runtimeName(entry.processName)). Stopping it runs `docker stop`.")
+                } else if let label = entry.launchdLabel {
                     Image(systemName: "arrow.triangle.2.circlepath")
                         .font(.system(size: 9, weight: .semibold))
                         .foregroundStyle(.secondary)
@@ -96,6 +103,9 @@ struct PortRow: View {
 
     /// Where the server runs from, or a hint about what usually lives on this port.
     private var subtitle: String {
+        if let container = entry.container {
+            return container.image
+        }
         if let project = entry.projectPath {
             return (project as NSString).abbreviatingWithTildeInPath
         }
@@ -106,6 +116,16 @@ struct PortRow: View {
             return Self.describe(executable: executable)
         }
         return "PID \(entry.pid)"
+    }
+
+    /// The container runtime, named the way users know it.
+    static func runtimeName(_ processName: String) -> String {
+        switch processName {
+        case "OrbStack", "OrbStack Helper": "OrbStack"
+        case "limactl": "Colima"
+        case "gvproxy": "Podman"
+        default: "Docker"
+        }
     }
 
     /// `/opt/homebrew/opt/postgresql@16/bin/postgres` → `Homebrew · postgresql@16`.
@@ -201,7 +221,11 @@ struct PortRow: View {
             Button("Open Project in Terminal", action: actions.openTerminal)
             Divider()
         }
-        Button("Copy PID \(String(entry.pid))", action: actions.copyPID)
+        if entry.container != nil {
+            Button("Copy Container ID", action: actions.copyContainerID)
+        } else {
+            Button("Copy PID \(String(entry.pid))", action: actions.copyPID)
+        }
         Divider()
         Button("Stop") { actions.stop(false) }
         Button("Force Quit") { actions.stop(true) }

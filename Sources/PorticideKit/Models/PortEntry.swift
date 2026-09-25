@@ -10,6 +10,8 @@ public struct PortEntry: Identifiable, Hashable, Sendable {
     public let service: ServiceInfo
     /// The launchd job that runs this process, if any (e.g. `homebrew.mxcl.postgresql@17`).
     public let launchdLabel: String?
+    /// The container that published this port, when the socket is held by a container runtime.
+    public let container: Container?
 
     public init(
         socket: ListeningSocket,
@@ -17,7 +19,8 @@ public struct PortEntry: Identifiable, Hashable, Sendable {
         commandLine: String?,
         projectPath: String?,
         service: ServiceInfo,
-        launchdLabel: String? = nil
+        launchdLabel: String? = nil,
+        container: Container? = nil
     ) {
         self.socket = socket
         self.executablePath = executablePath
@@ -25,6 +28,7 @@ public struct PortEntry: Identifiable, Hashable, Sendable {
         self.projectPath = projectPath
         self.service = service
         self.launchdLabel = launchdLabel
+        self.container = container
     }
 
     public var id: String { "\(socket.transport.rawValue)-\(socket.port)-\(socket.pid)" }

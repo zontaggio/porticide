@@ -15,6 +15,26 @@ public enum ServiceClassifier {
         return ServiceInfo(kind: .other, displayName: command.names.first ?? processName)
     }
 
+    /// Classifies a container by its image (`postgres:16-alpine` → PostgreSQL) and names
+    /// it after the container. Images Porticide doesn't know are shown as Docker.
+    public static func classify(container: Container) -> ServiceInfo {
+        let image = container.imageName.lowercased()
+        let kind = imageKinds[image] ?? {
+            let guess = classify(commandLine: image, processName: image).kind
+            return guess == .other ? .docker : guess
+        }()
+        return ServiceInfo(kind: kind, displayName: container.name, detail: container.image)
+    }
+
+    /// Official image names that don't match their executable's name.
+    private static let imageKinds: [String: ServiceKind] = [
+        "postgres": .postgres, "postgis": .postgres, "timescaledb": .postgres,
+        "mysql": .mysql, "mariadb": .mysql,
+        "mongo": .mongodb, "mongodb-community-server": .mongodb,
+        "redis": .redis, "redis-stack": .redis, "valkey": .redis,
+        "rabbitmq": .rabbitmq,
+    ]
+
     private struct Rule: Sendable {
         let kind: ServiceKind
         let matches: @Sendable (CommandTokens) -> Bool

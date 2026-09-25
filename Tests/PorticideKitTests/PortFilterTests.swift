@@ -44,6 +44,18 @@ struct PortFilterTests {
         #expect(filter.apply(to: [mdns]).isEmpty)
     }
 
+    @Test func showsContainersButHidesRuntimeInternals() {
+        let container = Container(id: "1", name: "app-db", image: "postgres:16", composeProject: nil, publishedPorts: [5433])
+        let published = PortEntry(
+            socket: ListeningSocket(port: 5433, pid: 1960, processName: "OrbStack", user: "me", transport: .tcp),
+            executablePath: "/Applications/OrbStack.app/Contents/MacOS/OrbStack",
+            commandLine: nil, projectPath: "/", service: ServiceInfo(kind: .postgres, displayName: "app-db"),
+            container: container
+        )
+        let runtimeSocket = entry(port: 32222, pid: 1960, name: "OrbStack", executable: "/Applications/OrbStack.app/Contents/MacOS/OrbStack")
+        #expect(filter.apply(to: [published, runtimeSocket]) == [published])
+    }
+
     @Test func hidesOtherUsersProcesses() {
         let other = entry(user: "root", project: "/Users/me/code/web")
         #expect(filter.apply(to: [other]).isEmpty)

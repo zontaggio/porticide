@@ -82,11 +82,16 @@ final class StatusMenu: NSObject {
             submenu.addItem(ActionItem("Open Project in Terminal", perform: actions.openTerminal))
             submenu.addItem(.separator())
         }
-        submenu.addItem(ActionItem("Copy PID \(entry.pid)", perform: actions.copyPID))
+        if entry.container != nil {
+            submenu.addItem(ActionItem("Copy Container ID", perform: actions.copyContainerID))
+        } else {
+            submenu.addItem(ActionItem("Copy PID \(entry.pid)", perform: actions.copyPID))
+        }
         submenu.addItem(.separator())
         submenu.addItem(ActionItem("Stop") { actions.stop(false) })
         let forceQuit = ActionItem("Force Quit") { actions.stop(true) }
-        forceQuit.isEnabled = entry.launchdLabel == nil // launchd jobs are always booted out.
+        // launchd jobs are always booted out; containers force quit with `docker kill`.
+        forceQuit.isEnabled = entry.launchdLabel == nil || entry.container != nil
         submenu.addItem(forceQuit)
         item.submenu = submenu
         return item

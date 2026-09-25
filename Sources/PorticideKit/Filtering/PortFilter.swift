@@ -22,6 +22,9 @@ public struct PortFilter: Sendable {
 
     func isUserProcess(_ entry: PortEntry) -> Bool {
         if entry.isMulticastDNS { return false }
+        // Container runtimes hold every published port; show the containers themselves and
+        // hide the runtime's internal sockets, which would stop all containers if killed.
+        if Containers.isRuntime(entry.processName) { return entry.container != nil }
         if let user = entry.user, user != currentUser { return false }
         if Self.systemProcessNames.contains(where: entry.processName.contains) { return false }
 
@@ -44,7 +47,7 @@ public struct PortFilter: Sendable {
     }
 
     static let systemProcessNames: [String] = [
-        "OrbStack", "com.apple", "launchd", "mDNSResponder", "airportd",
+        "com.apple", "launchd", "mDNSResponder", "airportd",
         "rapportd", "sharingd", "WiFiAgent", "ControlCenter", "Finder",
         "SystemUIServer", "loginwindow", "WindowServer", "coreduetd",
         "trustd", "cloudd", "apsd", "cfprefsd", "kernel_task",

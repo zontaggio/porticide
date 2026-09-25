@@ -4,8 +4,11 @@ import PorticideKit
 
 @MainActor
 final class PortListViewModel: ObservableObject {
-    struct Section {
-        let category: ServiceKind.Category
+    struct Section: Identifiable {
+        let id: String
+        let title: String
+        /// Container groups show a box next to their title.
+        let isContainerGroup: Bool
         let entries: [PortEntry]
     }
 
@@ -50,10 +53,25 @@ final class PortListViewModel: ObservableObject {
 
     // MARK: - Derived state
 
+    /// Dev servers first, then one group per Compose project, then databases and services.
     var sections: [Section] {
-        Dictionary(grouping: entries, by: \.service.kind.category)
+        struct Key: Hashable, Comparable {
+            let rank: Int
+            let title: String
+            let isContainerGroup: Bool
+            static func < (lhs: Key, rhs: Key) -> Bool { (lhs.rank, lhs.title) < (rhs.rank, rhs.title) }
+        }
+        func key(for entry: PortEntry) -> Key {
+            if let container = entry.container {
+                return Key(rank: 1, title: container.composeProject ?? "Containers", isContainerGroup: true)
+            }
+            let category = entry.service.kind.category
+            let rank = category == .web ? 0 : category.rawValue + 1
+            return Key(rank: rank, title: category.title, isContainerGroup: false)
+        }
+        return Dictionary(grouping: entries, by: key)
             .sorted { $0.key < $1.key }
-            .map { Section(category: $0.key, entries: $0.value) }
+            .map { Section(id: "\($0.key.rank)-\($0.key.title)", title: $0.key.title, isContainerGroup: $0.key.isContainerGroup, entries: $0.value) }
     }
 
     var statusText: String {
@@ -151,7 +169,8 @@ final class PortListViewModel: ObservableObject {
         let live = Set(allEntries.map(\.id))
         // Forget dismissed entries once they're really gone, or after a grace period
         // (a process that ignores SIGTERM should come back into view).
-        dismissed = dismissed.filter { live.contains($0.key) && now.timeIntervalSince($0.value) < 5 }
+        // 15 s leaves room for `docker stop`, which waits up to 10 s for a container to exit.
+        dismissed = dismissed.filter { live.contains($0.key) && now.timeIntervalSince($0.value) < 15 }
 
         let filter = PortFilter(
             includeSystemProcesses: settings.showSystemProcesses,
@@ -261,7 +280,8 @@ final class PortListViewModel: ObservableObject {
                       let terminal = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.Terminal") else { return }
                 NSWorkspace.shared.open([project], withApplicationAt: terminal, configuration: NSWorkspace.OpenConfiguration())
             },
-            copyPID: { Self.copy(String(entry.pid)) }
+            copyPID: { Self.copy(String(entry.pid)) },
+            copyContainerID: { Self.copy(entry.container?.id ?? "") }
         )
     }
 

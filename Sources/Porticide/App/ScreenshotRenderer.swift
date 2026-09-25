@@ -33,12 +33,24 @@ enum ScreenshotRenderer {
     static let demoEntries: [PortEntry] = [
         demo(3000, "node", .nextjs, detail: "v14.2.3", project: "~/code/acme/dashboard"),
         demo(5173, "node", .vite, detail: "v5.4.2", project: "~/code/acme/web"),
-        demo(6006, "node", .storybook, project: "~/code/acme/design-system"),
         demo(8000, "python3.12", .uvicorn, project: "~/code/acme/api"),
         demo(8501, "python3.12", .streamlit, detail: "v1.38.0", project: "~/code/labs/forecast"),
-        demo(5432, "postgres", .postgres, executable: "/opt/homebrew/opt/postgresql@16/bin/postgres"),
+        container(8080, name: "shop-api", image: "shop-api:dev", project: "shop"),
+        container(5433, name: "shop-postgres", image: "postgres:16-alpine", project: "shop"),
         demo(6379, "redis-server", .redis, executable: "/opt/homebrew/opt/redis/bin/redis-server"),
     ]
+
+    private static func container(_ port: Int, name: String, image: String, project: String) -> PortEntry {
+        let container = Container(id: String(port), name: name, image: image, composeProject: project, publishedPorts: [port])
+        return PortEntry(
+            socket: ListeningSocket(port: port, pid: 1960, processName: "OrbStack", user: NSUserName(), transport: .tcp),
+            executablePath: "/Applications/OrbStack.app/Contents/MacOS/OrbStack",
+            commandLine: nil,
+            projectPath: nil,
+            service: ServiceClassifier.classify(container: container),
+            container: container
+        )
+    }
 
     private static func demo(
         _ port: Int, _ process: String, _ kind: ServiceKind,

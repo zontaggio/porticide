@@ -21,10 +21,13 @@ public enum ProcessKiller {
         }
     }
 
-    /// Stops the process behind `entry`. Processes supervised by launchd are booted out
-    /// of their job instead of signalled, because launchd would restart them at once.
+    /// Stops what holds `entry`'s port. Containers are stopped through Docker (killing the
+    /// runtime would stop them all), and processes supervised by launchd are booted out of
+    /// their job instead of signalled, because launchd would restart them at once.
     public static func stop(_ entry: PortEntry, force: Bool) async throws(Failure) {
-        if let label = entry.launchdLabel {
+        if let container = entry.container {
+            try await Containers.stop(container, force: force)
+        } else if let label = entry.launchdLabel {
             try await LaunchdJobs.bootOut(label: label)
         } else {
             try terminate(pid: entry.pid, force: force)
