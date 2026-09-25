@@ -9,6 +9,12 @@ struct PortFilterTests {
         #expect(filter.apply(to: [vite]) == [vite])
     }
 
+    @Test func keepsServersStartedFromProjectWhateverRunsThem() {
+        let goRun = entry(port: 8080, executable: "/private/var/folders/xy/T/go-build123/b001/exe/main", project: "/Users/me/code/api")
+        let systemRuby = entry(port: 4000, executable: "/usr/bin/ruby", project: "/Users/me/code/blog")
+        #expect(filter.apply(to: [goRun, systemRuby]) == [goRun, systemRuby])
+    }
+
     @Test func keepsToolsInstalledUnderUsrLocal() {
         let node = entry(executable: "/usr/local/bin/node", project: "/Users/me/code/web")
         #expect(filter.apply(to: [node]) == [node])

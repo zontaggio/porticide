@@ -24,14 +24,17 @@ public struct PortFilter: Sendable {
         if let user = entry.user, user != currentUser { return false }
         if Self.systemProcessNames.contains(where: entry.processName.contains) { return false }
 
+        // Started from a project folder: a dev server, whatever runs it (the system
+        // Python or Ruby, a `go run` binary in a temporary folder...).
+        if let project = entry.projectPath, project != "/", project != homeDirectory, !Self.isSystemPath(project) {
+            return true
+        }
+
         if let executable = entry.executablePath {
             if Self.isSystemPath(executable) { return false }
             if executable.contains(".app/Contents/Frameworks/") && !executable.hasPrefix(homeDirectory) { return false }
         }
 
-        if let project = entry.projectPath, project != "/", project != homeDirectory, !Self.isSystemPath(project) {
-            return true
-        }
         // Not started from a project (e.g. `brew services`): keep services Porticide
         // recognises and anything the user installed themselves.
         if entry.service.kind != .other { return true }
