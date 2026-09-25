@@ -115,7 +115,7 @@ struct PopoverView: View {
                         entry: entry,
                         detailed: settings.showDetailed,
                         isHovered: hoveredEntry == entry.id,
-                        onKill: { viewModel.kill(entry, force: false) }
+                        onKill: { viewModel.kill(entry, force: NSEvent.modifierFlags.contains(.option)) }
                     )
                     .onHover { isHovered in
                         withAnimation(.easeInOut(duration: 0.15)) {
@@ -271,7 +271,7 @@ private struct PortRow: View {
                         .foregroundStyle(isHovered ? .red : .secondary.opacity(0.6))
                 }
                 .buttonStyle(.plain)
-                .help("Kill process")
+                .help("Stop process (⌥-click to force quit)")
             }
         }
         .padding(.horizontal, 10)

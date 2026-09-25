@@ -42,14 +42,35 @@ final class PortListViewModel: ObservableObject {
     }
 
     func kill(_ entry: PortEntry, force: Bool) {
-        if settings.confirmBeforeKill, !confirmKill(entry, force: force) { return }
-        ProcessKiller.terminate(pid: entry.pid, force: force)
-        monitor.refresh()
+        if settings.confirmBeforeKill {
+            let title = force ? "Force quit \(entry.service.displayName)?" : "Stop \(entry.service.displayName)?"
+            guard confirm(title, detail: "PID \(entry.pid) on port \(entry.port).", button: force ? "Force Quit" : "Stop") else { return }
+        }
+        terminate([entry], force: force)
     }
 
     func killAll() {
-        for entry in entries {
-            ProcessKiller.terminate(pid: entry.pid, force: false)
+        guard !entries.isEmpty else { return }
+        if settings.confirmBeforeKill {
+            let list = entries.map { "\($0.service.displayName) on :\($0.port)" }.joined(separator: "\n")
+            guard confirm("Stop \(entries.count) processes?", detail: list, button: "Stop All") else { return }
+        }
+        terminate(entries, force: false)
+    }
+
+    private func terminate(_ targets: [PortEntry], force: Bool) {
+        var failures: [(PortEntry, ProcessKiller.Failure)] = []
+        for entry in targets {
+            do {
+                try ProcessKiller.terminate(pid: entry.pid, force: force)
+            } catch .notFound {
+                continue // Already gone, which is what the user wanted.
+            } catch {
+                failures.append((entry, error))
+            }
+        }
+        if !failures.isEmpty {
+            showFailures(failures)
         }
         monitor.refresh()
     }
@@ -78,12 +99,33 @@ final class PortListViewModel: ObservableObject {
         entries = filter.apply(to: allEntries)
     }
 
-    private func confirmKill(_ entry: PortEntry, force: Bool) -> Bool {
+    private func confirm(_ title: String, detail: String, button: String) -> Bool {
         let alert = NSAlert()
-        alert.messageText = force ? "Force kill process?" : "Kill process?"
-        alert.informativeText = "\(entry.service.displayName) (PID \(entry.pid)) on port \(entry.port)."
-        alert.addButton(withTitle: "Kill")
+        alert.messageText = title
+        alert.informativeText = detail
+        alert.addButton(withTitle: button)
         alert.addButton(withTitle: "Cancel")
+        NSApp.activate(ignoringOtherApps: true)
         return alert.runModal() == .alertFirstButtonReturn
+    }
+
+    private func showFailures(_ failures: [(PortEntry, ProcessKiller.Failure)]) {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = failures.count == 1
+            ? "Couldn't stop \(failures[0].0.service.displayName)"
+            : "Couldn't stop \(failures.count) processes"
+        alert.informativeText = failures.map { entry, failure in
+            switch failure {
+            case .permissionDenied:
+                "PID \(entry.pid) belongs to another user. Run `sudo kill \(entry.pid)` in Terminal."
+            case .notFound:
+                "PID \(entry.pid) already exited."
+            case .other(let code):
+                "PID \(entry.pid): \(String(cString: strerror(code)))."
+            }
+        }.joined(separator: "\n")
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
     }
 }
