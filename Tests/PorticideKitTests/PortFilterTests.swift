@@ -9,6 +9,11 @@ struct PortFilterTests {
         #expect(filter.apply(to: [vite]) == [vite])
     }
 
+    @Test func keepsToolsInstalledUnderUsrLocal() {
+        let node = entry(executable: "/usr/local/bin/node", project: "/Users/me/code/web")
+        #expect(filter.apply(to: [node]) == [node])
+    }
+
     @Test func hidesOtherUsersProcesses() {
         let other = entry(user: "root", project: "/Users/me/code/web")
         #expect(filter.apply(to: [other]).isEmpty)

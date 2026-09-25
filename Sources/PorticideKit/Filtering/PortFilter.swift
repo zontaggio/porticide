@@ -43,8 +43,11 @@ public struct PortFilter: Sendable {
         "trustd", "cloudd", "apsd", "cfprefsd", "kernel_task",
     ]
 
+    /// `/usr/local` is deliberately absent: it's where Homebrew (Intel) and
+    /// the official Node.js installer put user-installed tools.
     static let systemPathPrefixes = [
-        "/System/", "/usr/", "/bin/", "/sbin/", "/private/", "/Library/Apple/", "/Applications/Utilities/",
+        "/System/", "/usr/bin/", "/usr/sbin/", "/usr/libexec/", "/bin/", "/sbin/",
+        "/private/", "/Library/Apple/", "/Applications/Utilities/",
     ]
 
     static func isSystemPath(_ path: String) -> Bool {
