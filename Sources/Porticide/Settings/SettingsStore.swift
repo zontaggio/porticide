@@ -2,17 +2,17 @@ import Combine
 import Foundation
 import PorticideKit
 
+/// User preferences, persisted in UserDefaults.
+@MainActor
 final class SettingsStore: ObservableObject {
-    @Published var portStart: Int { didSet { persist(); onChange?() } }
-    @Published var portEnd: Int { didSet { persist(); onChange?() } }
-    @Published var refreshInterval: TimeInterval { didSet { persist(); onChange?() } }
-    @Published var confirmBeforeKill: Bool { didSet { persist() } }
-    @Published var launchAtLogin: Bool { didSet { persist() } }
-    @Published var showNotifications: Bool { didSet { persist() } }
-    @Published var showDetailed: Bool { didSet { persist() } }
-    @Published var showSystemProcesses: Bool { didSet { persist(); onChange?() } }
-
-    var onChange: (() -> Void)?
+    @Published var portStart: Int { didSet { defaults.set(portStart, forKey: Keys.portStart) } }
+    @Published var portEnd: Int { didSet { defaults.set(portEnd, forKey: Keys.portEnd) } }
+    @Published var refreshInterval: TimeInterval { didSet { defaults.set(refreshInterval, forKey: Keys.refreshInterval) } }
+    @Published var confirmBeforeKill: Bool { didSet { defaults.set(confirmBeforeKill, forKey: Keys.confirmBeforeKill) } }
+    @Published var launchAtLogin: Bool { didSet { defaults.set(launchAtLogin, forKey: Keys.launchAtLogin) } }
+    @Published var showNotifications: Bool { didSet { defaults.set(showNotifications, forKey: Keys.showNotifications) } }
+    @Published var showDetailed: Bool { didSet { defaults.set(showDetailed, forKey: Keys.showDetailed) } }
+    @Published var showSystemProcesses: Bool { didSet { defaults.set(showSystemProcesses, forKey: Keys.showSystemProcesses) } }
 
     /// The range to scan. Safe to use even while the user is mid-edit with start > end.
     var portRange: ClosedRange<Int> { PortRange.normalized(portStart, portEnd) }
@@ -20,37 +20,18 @@ final class SettingsStore: ObservableObject {
     /// Never poll faster than once a second, whatever is stored.
     var effectiveRefreshInterval: TimeInterval { max(refreshInterval, 1) }
 
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
 
-    init() {
-        let start = defaults.object(forKey: Keys.portStart) as? Int ?? 3000
-        let end = defaults.object(forKey: Keys.portEnd) as? Int ?? 9999
-        let interval = defaults.object(forKey: Keys.refreshInterval) as? Double ?? 3.0
-        let confirm = defaults.object(forKey: Keys.confirmBeforeKill) as? Bool ?? true
-        let launch = defaults.object(forKey: Keys.launchAtLogin) as? Bool ?? false
-        let notify = defaults.object(forKey: Keys.showNotifications) as? Bool ?? false
-        let detailed = defaults.object(forKey: Keys.showDetailed) as? Bool ?? false
-        let showSystem = defaults.object(forKey: Keys.showSystemProcesses) as? Bool ?? false
-
-        portStart = start
-        portEnd = end
-        refreshInterval = interval
-        confirmBeforeKill = confirm
-        launchAtLogin = launch
-        showNotifications = notify
-        showDetailed = detailed
-        showSystemProcesses = showSystem
-    }
-
-    private func persist() {
-        defaults.set(portStart, forKey: Keys.portStart)
-        defaults.set(portEnd, forKey: Keys.portEnd)
-        defaults.set(refreshInterval, forKey: Keys.refreshInterval)
-        defaults.set(confirmBeforeKill, forKey: Keys.confirmBeforeKill)
-        defaults.set(launchAtLogin, forKey: Keys.launchAtLogin)
-        defaults.set(showNotifications, forKey: Keys.showNotifications)
-        defaults.set(showDetailed, forKey: Keys.showDetailed)
-        defaults.set(showSystemProcesses, forKey: Keys.showSystemProcesses)
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        portStart = defaults.object(forKey: Keys.portStart) as? Int ?? 3000
+        portEnd = defaults.object(forKey: Keys.portEnd) as? Int ?? 9999
+        refreshInterval = defaults.object(forKey: Keys.refreshInterval) as? Double ?? 3.0
+        confirmBeforeKill = defaults.object(forKey: Keys.confirmBeforeKill) as? Bool ?? true
+        launchAtLogin = defaults.object(forKey: Keys.launchAtLogin) as? Bool ?? false
+        showNotifications = defaults.object(forKey: Keys.showNotifications) as? Bool ?? false
+        showDetailed = defaults.object(forKey: Keys.showDetailed) as? Bool ?? false
+        showSystemProcesses = defaults.object(forKey: Keys.showSystemProcesses) as? Bool ?? false
     }
 
     private enum Keys {

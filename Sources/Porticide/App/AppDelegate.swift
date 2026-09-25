@@ -4,22 +4,25 @@ import SwiftUI
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = SettingsStore()
-    private lazy var monitor = PortMonitor(settings: settings)
-    private var statusItem: NSStatusItem?
-    private var popover = NSPopover()
-    private var settingsWindow: SettingsWindowController?
-    private var viewModel: PortListViewModel?
-
-    nonisolated func applicationDidFinishLaunching(_ notification: Notification) {
-        Task { @MainActor in
-            setupUI()
-        }
+    private lazy var viewModel = PortListViewModel(settings: settings) { [weak self] in
+        self?.openSettings()
     }
-    
-    private func setupUI() {
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        
-        if let button = statusItem?.button {
+    private var statusItem: NSStatusItem?
+    private let popover = NSPopover()
+    private var settingsWindow: SettingsWindowController?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        setUpStatusItem()
+
+        popover.contentViewController = NSHostingController(rootView: PopoverView(viewModel: viewModel, settings: settings))
+        popover.behavior = .transient
+
+        viewModel.start()
+    }
+
+    private func setUpStatusItem() {
+        let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        if let button = statusItem.button {
             if let logo = AppAssets.logo?.copy() as? NSImage {
                 logo.size = NSSize(width: 18, height: 18)
                 button.image = logo
@@ -29,29 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             button.action = #selector(togglePopover)
             button.target = self
         }
-
-        let viewModel = PortListViewModel(settings: settings, monitor: monitor, onOpenSettings: { [weak self] in
-            self?.openSettings()
-        }, onQuit: { [weak self] in
-            self?.quitApp()
-        })
-        self.viewModel = viewModel
-        viewModel.bindSettings()
-
-        let popoverView = PopoverView(viewModel: viewModel)
-        popover.contentViewController = NSHostingController(rootView: popoverView)
-        popover.behavior = .transient
-
-        settings.onChange = { [weak self] in
-            self?.monitor.start()
-            self?.viewModel?.bindSettings()
-        }
-
-        monitor.onUpdate = { [weak self] entries in
-            self?.viewModel?.update(entries: entries)
-        }
-
-        monitor.start()
+        self.statusItem = statusItem
     }
 
     @objc private func togglePopover() {
@@ -64,15 +45,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func openSettings() {
+        popover.performClose(nil)
         if settingsWindow == nil {
             settingsWindow = SettingsWindowController(settings: settings)
         }
         settingsWindow?.showWindow(nil)
         settingsWindow?.window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-    }
-
-    private func quitApp() {
-        NSApp.terminate(nil)
     }
 }

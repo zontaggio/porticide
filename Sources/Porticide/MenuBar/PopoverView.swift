@@ -3,6 +3,7 @@ import SwiftUI
 
 struct PopoverView: View {
     @ObservedObject var viewModel: PortListViewModel
+    @ObservedObject var settings: SettingsStore
     @State private var hoveredEntry: String?
 
     var body: some View {
@@ -41,7 +42,7 @@ struct PopoverView: View {
                         .foregroundStyle(.secondary)
                     Text("•")
                         .foregroundStyle(.quaternary)
-                    Text(timeAgo(viewModel.lastUpdated))
+                    Text(viewModel.lastUpdated.map(timeAgo) ?? "scanning…")
                         .font(.system(size: 11))
                         .foregroundStyle(.tertiary)
                 }
@@ -70,7 +71,7 @@ struct PopoverView: View {
     // MARK: - Content
     private var content: some View {
         Group {
-            if viewModel.isLoading && viewModel.entries.isEmpty {
+            if viewModel.isScanning && viewModel.entries.isEmpty {
                 loadingView
             } else if viewModel.entries.isEmpty {
                 emptyView
@@ -112,9 +113,9 @@ struct PopoverView: View {
                 ForEach(viewModel.entries) { entry in
                     PortRow(
                         entry: entry,
-                        detailed: viewModel.showDetailed,
+                        detailed: settings.showDetailed,
                         isHovered: hoveredEntry == entry.id,
-                        onKill: { viewModel.kill(entry: entry, force: false) }
+                        onKill: { viewModel.kill(entry, force: false) }
                     )
                     .onHover { isHovered in
                         withAnimation(.easeInOut(duration: 0.15)) {
@@ -131,7 +132,7 @@ struct PopoverView: View {
     // MARK: - Footer
     private var footer: some View {
         HStack(spacing: 0) {
-            footerButton(icon: "arrow.clockwise", label: "Refresh", showSpinner: viewModel.isLoading) {
+            footerButton(icon: "arrow.clockwise", label: "Refresh", showSpinner: viewModel.isScanning) {
                 viewModel.refresh()
             }
             Divider()
@@ -147,16 +148,13 @@ struct PopoverView: View {
 
             Spacer()
 
-            Toggle(isOn: $viewModel.showDetailed) {
+            Toggle(isOn: $settings.showDetailed) {
                 Text("Details")
                     .font(.system(size: 10))
                     .foregroundStyle(.secondary)
             }
             .toggleStyle(.switch)
             .controlSize(.mini)
-            .onChange(of: viewModel.showDetailed) { _ in
-                viewModel.updateDetailedSetting()
-            }
 
             Divider()
                 .frame(height: 20)

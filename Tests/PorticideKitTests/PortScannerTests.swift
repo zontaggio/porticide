@@ -5,11 +5,11 @@ import Testing
 
 /// Runs the real `lsof` against a socket opened by the test process itself.
 struct PortScannerTests {
-    @Test func findsSocketListeningInThisProcess() throws {
+    @Test func findsSocketListeningInThisProcess() async throws {
         let listener = try TCPListener()
         defer { listener.close() }
 
-        let entries = PortScanner().scan(portRange: listener.port...listener.port)
+        let entries = await PortScanner().scan(portRange: listener.port...listener.port)
         let entry = try #require(entries.first { $0.pid == getpid() })
 
         #expect(entry.port == listener.port)

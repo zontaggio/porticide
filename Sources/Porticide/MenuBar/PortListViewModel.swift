@@ -1,64 +1,48 @@
 import AppKit
+import Combine
 import PorticideKit
 
 @MainActor
 final class PortListViewModel: ObservableObject {
-    @Published var entries: [PortEntry] = []
-    @Published var showDetailed: Bool
-    @Published var isLoading: Bool = true
-    @Published var lastUpdated: Date = Date()
-    private var rawEntries: [PortEntry] = []
+    @Published private(set) var entries: [PortEntry] = []
+    @Published private(set) var isScanning = true
+    @Published private(set) var lastUpdated: Date?
 
+    let settings: SettingsStore
     var portRange: ClosedRange<Int> { settings.portRange }
 
-    private let settings: SettingsStore
-    private let monitor: PortMonitor
+    private let monitor = PortMonitor()
+    private var allEntries: [PortEntry] = []
+    private var cancellables: Set<AnyCancellable> = []
     private let onOpenSettings: () -> Void
-    private let onQuit: () -> Void
 
-    init(settings: SettingsStore, monitor: PortMonitor, onOpenSettings: @escaping () -> Void, onQuit: @escaping () -> Void) {
+    init(settings: SettingsStore, onOpenSettings: @escaping () -> Void) {
         self.settings = settings
-        self.monitor = monitor
         self.onOpenSettings = onOpenSettings
-        self.onQuit = onQuit
-        self.showDetailed = settings.showDetailed
+
+        monitor.onUpdate = { [weak self] entries in
+            self?.receive(entries)
+        }
+
+        // Restart scanning once the user stops typing in the settings window.
+        settings.objectWillChange
+            .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+            .sink { [weak self] _ in self?.start() }
+            .store(in: &cancellables)
+    }
+
+    func start() {
+        applyFilter()
+        monitor.start(portRange: settings.portRange, interval: settings.effectiveRefreshInterval)
     }
 
     func refresh() {
-        isLoading = true
+        isScanning = true
         monitor.refresh()
     }
 
-    func updateDetailedSetting() {
-        settings.showDetailed = showDetailed
-    }
-
-    func update(entries: [PortEntry]) {
-        rawEntries = entries
-        applyFilters()
-        isLoading = false
-        lastUpdated = Date()
-    }
-
-    func bindSettings() {
-        showDetailed = settings.showDetailed
-        applyFilters()
-    }
-
-    private func applyFilters() {
-        let filter = PortFilter(
-            includeSystemProcesses: settings.showSystemProcesses,
-            currentUser: NSUserName(),
-            homeDirectory: NSHomeDirectory()
-        )
-        entries = filter.apply(to: rawEntries)
-    }
-
-    func kill(entry: PortEntry, force: Bool) {
-        if settings.confirmBeforeKill {
-            let confirmed = confirmKill(entry: entry, force: force)
-            if !confirmed { return }
-        }
+    func kill(_ entry: PortEntry, force: Bool) {
+        if settings.confirmBeforeKill, !confirmKill(entry, force: force) { return }
         ProcessKiller.terminate(pid: entry.pid, force: force)
         monitor.refresh()
     }
@@ -75,10 +59,26 @@ final class PortListViewModel: ObservableObject {
     }
 
     func quit() {
-        onQuit()
+        NSApp.terminate(nil)
     }
 
-    private func confirmKill(entry: PortEntry, force: Bool) -> Bool {
+    private func receive(_ entries: [PortEntry]) {
+        allEntries = entries
+        applyFilter()
+        isScanning = false
+        lastUpdated = Date()
+    }
+
+    private func applyFilter() {
+        let filter = PortFilter(
+            includeSystemProcesses: settings.showSystemProcesses,
+            currentUser: NSUserName(),
+            homeDirectory: NSHomeDirectory()
+        )
+        entries = filter.apply(to: allEntries)
+    }
+
+    private func confirmKill(_ entry: PortEntry, force: Bool) -> Bool {
         let alert = NSAlert()
         alert.messageText = force ? "Force kill process?" : "Kill process?"
         alert.informativeText = "\(entry.service.displayName) (PID \(entry.pid)) on port \(entry.port)."

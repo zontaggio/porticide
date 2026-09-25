@@ -1,47 +1,39 @@
 import Foundation
 import PorticideKit
 
-final class PortMonitor: @unchecked Sendable {
-    private let settings: SettingsStore
-    private let scanner = PortScanner()
-    private let queue = DispatchQueue(label: "porticide.monitor", qos: .userInitiated)
-    private var timer: DispatchSourceTimer?
-
+/// Scans ports on a fixed interval and reports results on the main actor.
+@MainActor
+final class PortMonitor {
     var onUpdate: (([PortEntry]) -> Void)?
 
-    init(settings: SettingsStore) {
-        self.settings = settings
-    }
+    private let scanner = PortScanner()
+    private var loop: Task<Void, Never>?
+    private var portRange: ClosedRange<Int> = PortRange.valid
 
-    func start() {
-        stop()
-        scheduleTimer()
-        refresh()
-    }
-
-    func stop() {
-        timer?.cancel()
-        timer = nil
-    }
-
-    func refresh() {
-        let range = settings.portRange
-        queue.async { [weak self] in
-            guard let self else { return }
-            let entries = self.scanner.scan(portRange: range)
-            DispatchQueue.main.async {
-                self.onUpdate?(entries)
+    func start(portRange: ClosedRange<Int>, interval: TimeInterval) {
+        self.portRange = portRange
+        loop?.cancel()
+        loop = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                await self.scan()
+                try? await Task.sleep(for: .seconds(interval))
             }
         }
     }
 
-    private func scheduleTimer() {
-        let timer = DispatchSource.makeTimerSource(queue: queue)
-        timer.schedule(deadline: .now() + 0.1, repeating: settings.effectiveRefreshInterval)
-        timer.setEventHandler { [weak self] in
-            self?.refresh()
-        }
-        timer.resume()
-        self.timer = timer
+    func stop() {
+        loop?.cancel()
+        loop = nil
+    }
+
+    /// Scans right away, outside the regular schedule.
+    func refresh() {
+        Task { await scan() }
+    }
+
+    private func scan() async {
+        let entries = await scanner.scan(portRange: portRange)
+        onUpdate?(entries)
     }
 }
