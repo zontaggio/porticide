@@ -19,6 +19,7 @@ extension ServiceKind {
         case .deno: "tortoise.fill"
         case .node, .python, .ruby: "chevron.left.forwardslash.chevron.right"
         case .other: "terminal.fill"
+        default: "server.rack"
         }
     }
 
@@ -35,6 +36,7 @@ extension ServiceKind {
         case .bun: .orange
         case .python: .yellow
         case .ruby: .pink
+        default: .indigo
         }
     }
 }

@@ -17,6 +17,13 @@ struct ServiceClassifierTests {
         ("/opt/homebrew/opt/redis/bin/redis-server 127.0.0.1:6379", .redis),
         ("/Applications/Docker.app/Contents/MacOS/com.docker.backend", .docker),
         ("bun run --hot src/index.ts", .bun),
+        ("node /Users/me/site/node_modules/.bin/astro dev", .astro),
+        ("node /Users/me/app/node_modules/.bin/ng serve", .angular),
+        ("/opt/homebrew/bin/python3 /opt/homebrew/bin/jupyter-lab", .jupyter),
+        ("/opt/homebrew/opt/ollama/bin/ollama serve", .ollama),
+        ("nginx: master process /opt/homebrew/opt/nginx/bin/nginx -g daemon off;", .nginx),
+        ("/opt/homebrew/opt/mysql/bin/mysqld --basedir=/opt/homebrew/opt/mysql", .mysql),
+        ("bundle exec jekyll serve --livereload", .jekyll),
         ("node server.js", .node),
         ("/usr/bin/python3 -m http.server 8080", .python),
     ])
@@ -25,7 +32,7 @@ struct ServiceClassifierTests {
     }
 
     @Test func doesNotMistakeBundlerForBun() {
-        let service = ServiceClassifier.classify(commandLine: "/usr/bin/ruby /usr/local/bin/bundle exec jekyll serve", processName: "ruby")
+        let service = ServiceClassifier.classify(commandLine: "/usr/bin/ruby /usr/local/bin/bundle exec rackup", processName: "ruby")
         #expect(service.kind == .ruby)
     }
 
@@ -40,12 +47,19 @@ struct ServiceClassifierTests {
     }
 
     @Test func fallsBackToExecutableName() {
-        let service = ServiceClassifier.classify(commandLine: "/usr/local/bin/caddy run", processName: "caddy")
+        let service = ServiceClassifier.classify(commandLine: "/opt/homebrew/bin/mailpit --smtp 0.0.0.0:1025", processName: "mailpit")
         #expect(service.kind == .other)
-        #expect(service.displayName == "caddy")
+        #expect(service.displayName == "mailpit")
     }
 
     @Test func usesProcessNameWithoutCommandLine() {
         #expect(ServiceClassifier.classify(commandLine: nil, processName: "redis-server").kind == .redis)
+    }
+
+    @Test func groupsKindsIntoCategories() {
+        #expect(ServiceKind.vite.category == .web)
+        #expect(ServiceKind.postgres.category == .database)
+        #expect(ServiceKind.docker.category == .infrastructure)
+        #expect(!ServiceKind.redis.speaksHTTP)
     }
 }
