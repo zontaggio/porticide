@@ -46,11 +46,11 @@ struct PortRow: View {
         .onHover { hovering in
             withAnimation(.easeOut(duration: 0.12)) { isHovered = hovering && !isStopping }
         }
-        .contextMenu { contextMenu }
+        .contextMenu { if !isStopping { contextMenu } }
         .help(entry.commandLine ?? entry.processName)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(entry.service.displayName) on port \(entry.port)")
-        .accessibilityAction(named: "Stop") { actions.stop(false) }
+        .accessibilityAction(named: "Stop") { if !isStopping { actions.stop(false) } }
     }
 
     // MARK: - Content

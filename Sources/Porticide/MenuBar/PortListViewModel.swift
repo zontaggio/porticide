@@ -124,6 +124,7 @@ final class PortListViewModel: ObservableObject {
     // MARK: - Stopping
 
     func stop(_ entry: PortEntry, force: Bool) {
+        guard stopStarts[entry.id] == nil else { return }
         if settings.confirmBeforeKill {
             let title = force ? "Force quit \(entry.service.displayName)?" : "Stop \(entry.service.displayName)?"
             guard confirm(title, detail: "PID \(entry.pid) on port \(entry.port).", button: force ? "Force Quit" : "Stop") else { return }
@@ -142,6 +143,8 @@ final class PortListViewModel: ObservableObject {
     }
 
     private func terminate(_ targets: [PortEntry], force: Bool) {
+        // A row may have started stopping while a confirmation dialog was open.
+        let targets = targets.filter { stopStarts[$0.id] == nil }
         var stopped: [PortEntry] = []
         var failures: [(PortEntry, ProcessKiller.Failure)] = []
         for entry in targets {
@@ -170,18 +173,20 @@ final class PortListViewModel: ObservableObject {
         guard !stopped.isEmpty else { return }
         let now = Date()
         let stagger = 0.07
+        var starts: [PortEntry.ID: Date] = [:]
         for (index, entry) in stopped.enumerated() {
-            stopStarts[entry.id] = now.addingTimeInterval(Double(index) * stagger)
+            starts[entry.id] = now.addingTimeInterval(Double(index) * stagger)
         }
+        stopStarts.merge(starts) { _, new in new }
         Feedback.play(sound: settings.playSounds)
 
         let total = StopEffect.duration + Double(stopped.count - 1) * stagger
         Task { [weak self] in
             try? await Task.sleep(for: .seconds(total + 0.05))
             guard let self else { return }
-            for entry in stopped {
-                stopStarts[entry.id] = nil
-                dismissed[entry.id] = Date()
+            for (id, start) in starts where stopStarts[id] == start {
+                stopStarts[id] = nil
+                dismissed[id] = Date()
             }
             applyFilter()
             monitor.refresh()
