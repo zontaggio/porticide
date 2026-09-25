@@ -85,6 +85,13 @@ final class PortListViewModel: ObservableObject {
         receive(entries)
     }
 
+    #if DEBUG
+    /// Puts an entry mid-animation without stopping anything; used for screenshots.
+    func previewStop(_ id: PortEntry.ID, startedAt start: Date) {
+        stopStarts[id] = start
+    }
+    #endif
+
     private func receive(_ entries: [PortEntry]) {
         allEntries = entries
         isScanning = false
