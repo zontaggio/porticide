@@ -17,8 +17,11 @@ rm -rf "$APP_DIR"
 mkdir -p "$APP_DIR/Contents/MacOS" "$APP_DIR/Contents/Resources"
 
 cp "$BIN_DIR/$APP_NAME" "$APP_DIR/Contents/MacOS/$APP_NAME"
-cp -R "$BIN_DIR/${APP_NAME}_${APP_NAME}.bundle" "$APP_DIR/Contents/Resources/"
+if [[ -d "$BIN_DIR/${APP_NAME}_${APP_NAME}.bundle" ]]; then
+    cp -R "$BIN_DIR/${APP_NAME}_${APP_NAME}.bundle" "$APP_DIR/Contents/Resources/"
+fi
 cp Support/Info.plist "$APP_DIR/Contents/Info.plist"
+cp Support/AppIcon.icns "$APP_DIR/Contents/Resources/AppIcon.icns"
 
 # Ad-hoc signature: enough to run locally and to register as a login item.
 codesign --force --sign - --timestamp=none "$APP_DIR"

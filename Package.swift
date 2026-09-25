@@ -16,10 +16,7 @@ let package = Package(
         // The menu bar app (AppKit + SwiftUI).
         .executableTarget(
             name: "Porticide",
-            dependencies: ["PorticideKit"],
-            resources: [
-                .process("Resources")
-            ]
+            dependencies: ["PorticideKit"]
         ),
         .testTarget(
             name: "PorticideKitTests",

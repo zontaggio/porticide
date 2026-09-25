@@ -23,17 +23,8 @@ struct PopoverView: View {
     // MARK: - Header
     private var header: some View {
         HStack(alignment: .center, spacing: 12) {
-            if let logo = AppAssets.logo {
-                Image(nsImage: logo)
-                    .renderingMode(.template)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 28, height: 28)
-                    .foregroundStyle(.primary)
-            } else {
-                Text("🔪")
-                    .font(.system(size: 24))
-            }
+            PorticideMark()
+                .frame(width: 28, height: 28)
 
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
