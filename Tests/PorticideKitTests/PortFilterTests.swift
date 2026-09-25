@@ -54,7 +54,7 @@ struct PortFilterTests {
             executablePath: executable,
             commandLine: nil,
             projectPath: project,
-            service: ServiceInfo(displayName: name, iconName: "terminal")
+            service: ServiceInfo(kind: .other, displayName: name)
         )
     }
 }

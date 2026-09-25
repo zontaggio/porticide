@@ -22,7 +22,7 @@ public struct PortScanner: Sendable {
             executablePath: ProcessInspector.executablePath(pid: socket.pid),
             commandLine: commandLine,
             projectPath: projectRoot == "/" ? nil : projectRoot,
-            service: ServiceClassifier.classify(commandLine: commandLine)
+            service: ServiceClassifier.classify(commandLine: commandLine, processName: socket.processName)
         )
     }
 }

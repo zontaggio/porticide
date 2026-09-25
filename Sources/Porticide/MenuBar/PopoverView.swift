@@ -220,7 +220,7 @@ private struct PortRow: View {
                 .frame(width: 52, height: 28)
                 .background(
                     LinearGradient(
-                        colors: gradientColors,
+                        colors: [entry.service.kind.tint, entry.service.kind.tint.opacity(0.7)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     ),
@@ -230,9 +230,9 @@ private struct PortRow: View {
             // Service info
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 5) {
-                    Image(systemName: entry.service.iconName)
+                    Image(systemName: entry.service.kind.symbolName)
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(iconColor)
+                        .foregroundStyle(entry.service.kind.tint)
                     Text(entry.service.displayName)
                         .font(.system(size: 12, weight: .medium))
                         .lineLimit(1)
@@ -287,48 +287,5 @@ private struct PortRow: View {
                 .fill(.ultraThinMaterial)
         )
         .animation(.easeInOut(duration: 0.1), value: isHovered)
-    }
-
-    private var gradientColors: [Color] {
-        switch entry.service.displayName {
-        case let name where name.contains("vite"):
-            return [Color.purple, Color.pink]
-        case let name where name.contains("next"):
-            return [Color.black, Color.gray]
-        case let name where name.contains("streamlit"):
-            return [Color.red, Color.orange]
-        case let name where name.contains("django"):
-            return [Color.green, Color.mint]
-        case let name where name.contains("flask"):
-            return [Color.gray, Color.black]
-        case let name where name.contains("bun"):
-            return [Color.orange, Color.yellow]
-        case let name where name.contains("webpack"):
-            return [Color.blue, Color.cyan]
-        case let name where name.contains("docker"):
-            return [Color.blue, Color.indigo]
-        case let name where name.contains("node"):
-            return [Color.green, Color.mint]
-        case let name where name.contains("python"):
-            return [Color.yellow, Color.blue]
-        default:
-            return [Color.gray, Color.secondary]
-        }
-    }
-
-    private var iconColor: Color {
-        switch entry.service.displayName {
-        case let name where name.contains("vite"): return .purple
-        case let name where name.contains("next"): return .primary
-        case let name where name.contains("streamlit"): return .red
-        case let name where name.contains("django"): return .green
-        case let name where name.contains("flask"): return .gray
-        case let name where name.contains("bun"): return .orange
-        case let name where name.contains("webpack"): return .blue
-        case let name where name.contains("docker"): return .blue
-        case let name where name.contains("node"): return .green
-        case let name where name.contains("python"): return .yellow
-        default: return .secondary
-        }
     }
 }
