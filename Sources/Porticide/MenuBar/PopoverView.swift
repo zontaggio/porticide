@@ -1,7 +1,8 @@
+import PorticideKit
 import SwiftUI
 
 struct PopoverView: View {
-    @ObservedObject var viewModel: AppViewModel
+    @ObservedObject var viewModel: PortListViewModel
     @State private var hoveredEntry: String?
 
     var body: some View {
@@ -229,13 +230,13 @@ private struct PortRow: View {
             // Service info
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 5) {
-                    Image(systemName: entry.iconName)
+                    Image(systemName: entry.service.iconName)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(iconColor)
-                    Text(entry.displayName)
+                    Text(entry.service.displayName)
                         .font(.system(size: 12, weight: .medium))
                         .lineLimit(1)
-                    if let detail = entry.detail {
+                    if let detail = entry.service.detail {
                         Text(detail)
                             .font(.system(size: 10, weight: .regular))
                             .foregroundStyle(.secondary)
@@ -245,7 +246,7 @@ private struct PortRow: View {
                     }
                 }
                 if let path = entry.projectPath {
-                    Text(path)
+                    Text((path as NSString).abbreviatingWithTildeInPath)
                         .font(.system(size: 10))
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
@@ -289,7 +290,7 @@ private struct PortRow: View {
     }
 
     private var gradientColors: [Color] {
-        switch entry.displayName {
+        switch entry.service.displayName {
         case let name where name.contains("vite"):
             return [Color.purple, Color.pink]
         case let name where name.contains("next"):
@@ -316,7 +317,7 @@ private struct PortRow: View {
     }
 
     private var iconColor: Color {
-        switch entry.displayName {
+        switch entry.service.displayName {
         case let name where name.contains("vite"): return .purple
         case let name where name.contains("next"): return .primary
         case let name where name.contains("streamlit"): return .red

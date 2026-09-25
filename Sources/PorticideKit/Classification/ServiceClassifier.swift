@@ -1,13 +1,8 @@
 import Foundation
 
-struct ServiceInfo: Hashable {
-    let displayName: String
-    let detail: String?
-    let iconName: String
-}
-
-enum ServiceClassifier {
-    static func classify(commandLine: String?) -> ServiceInfo {
+/// Recognises common local dev servers from a process command line.
+public enum ServiceClassifier {
+    public static func classify(commandLine: String?) -> ServiceInfo {
         guard let commandLine else {
             return ServiceInfo(displayName: "Unknown", detail: nil, iconName: "questionmark")
         }

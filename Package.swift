@@ -1,5 +1,4 @@
-// swift-tools-version: 6.1
-// The swift-tools-version declares the minimum version of Swift required to build this package.
+// swift-tools-version: 6.0
 
 import PackageDescription
 
@@ -8,17 +7,23 @@ let package = Package(
     platforms: [
         .macOS(.v13)
     ],
+    products: [
+        .executable(name: "Porticide", targets: ["Porticide"])
+    ],
     targets: [
+        // Port discovery, process inspection and classification. No UI dependencies.
+        .target(name: "PorticideKit"),
+        // The menu bar app (AppKit + SwiftUI).
         .executableTarget(
             name: "Porticide",
-            path: "Sources/Porticide",
+            dependencies: ["PorticideKit"],
             resources: [
                 .process("Resources")
             ]
         ),
         .testTarget(
-            name: "PorticideTests",
-            dependencies: ["Porticide"]
+            name: "PorticideKitTests",
+            dependencies: ["PorticideKit"]
         )
     ]
 )

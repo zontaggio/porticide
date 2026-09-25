@@ -8,7 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var popover = NSPopover()
     private var settingsWindow: SettingsWindowController?
-    private var viewModel: AppViewModel?
+    private var viewModel: PortListViewModel?
 
     nonisolated func applicationDidFinishLaunching(_ notification: Notification) {
         Task { @MainActor in
@@ -30,7 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             button.target = self
         }
 
-        let viewModel = AppViewModel(settings: settings, monitor: monitor, onOpenSettings: { [weak self] in
+        let viewModel = PortListViewModel(settings: settings, monitor: monitor, onOpenSettings: { [weak self] in
             self?.openSettings()
         }, onQuit: { [weak self] in
             self?.quitApp()
