@@ -89,6 +89,26 @@ struct PorticideMark: View {
     }
 }
 
+/// The app icon in miniature: the mark on a dark squircle.
+struct AppIconView: View {
+    var size: CGFloat = 30
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: size * 0.26, style: .continuous)
+            .fill(LinearGradient(colors: [Color(hex: 0x222932), Color(hex: 0x0C0F13)], startPoint: .top, endPoint: .bottom))
+            .overlay(
+                RadialGradient(colors: [Brand.teal.opacity(0.3), .clear], center: .center, startRadius: 0, endRadius: size * 0.6)
+            )
+            .overlay(PorticideMark(socketColor: Color(hex: 0xF4F6F7)).padding(size * 0.13))
+            .overlay(
+                RoundedRectangle(cornerRadius: size * 0.26, style: .continuous)
+                    .strokeBorder(.white.opacity(0.12), lineWidth: 0.5)
+            )
+            .frame(width: size, height: size)
+            .shadow(color: .black.opacity(0.2), radius: 2, y: 1)
+    }
+}
+
 #Preview {
     HStack(spacing: 24) {
         PorticideMark().frame(width: 64)

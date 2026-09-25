@@ -53,7 +53,7 @@ struct SettingsView: View {
                             }
                         }
                     }
-                Toggle("Show detailed view", isOn: $settings.showDetailed)
+                Toggle("Show command lines", isOn: $settings.showCommandLines)
                 Toggle("Show system processes", isOn: $settings.showSystemProcesses)
             }
         }

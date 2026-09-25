@@ -4,20 +4,30 @@ import PorticideKit
 
 @MainActor
 final class PortListViewModel: ObservableObject {
+    struct Section {
+        let category: ServiceKind.Category
+        let entries: [PortEntry]
+    }
+
     @Published private(set) var entries: [PortEntry] = []
     @Published private(set) var isScanning = true
-    @Published private(set) var lastUpdated: Date?
+    /// When each stopped entry started its exit animation.
+    @Published private(set) var stopStarts: [PortEntry.ID: Date] = [:]
 
     let settings: SettingsStore
     var portRange: ClosedRange<Int> { settings.portRange }
+    /// Freezes the animation clock; used to render screenshots frame by frame.
+    var clockOverride: Date?
 
     private let monitor = PortMonitor()
-    private let notifier: KillNotifier
-    private var allEntries: [PortEntry] = []
-    private var cancellables: Set<AnyCancellable> = []
+    private let notifier: KillNotifier?
     private let onOpenSettings: () -> Void
+    private var allEntries: [PortEntry] = []
+    /// Entries already animated away, hidden until a scan confirms they're gone.
+    private var dismissed: [PortEntry.ID: Date] = [:]
+    private var cancellables: Set<AnyCancellable> = []
 
-    init(settings: SettingsStore, notifier: KillNotifier, onOpenSettings: @escaping () -> Void) {
+    init(settings: SettingsStore, notifier: KillNotifier?, onOpenSettings: @escaping () -> Void) {
         self.settings = settings
         self.notifier = notifier
         self.onOpenSettings = onOpenSettings
@@ -33,17 +43,80 @@ final class PortListViewModel: ObservableObject {
             .store(in: &cancellables)
     }
 
+    // MARK: - Derived state
+
+    var sections: [Section] {
+        Dictionary(grouping: entries, by: \.service.kind.category)
+            .sorted { $0.key < $1.key }
+            .map { Section(category: $0.key, entries: $0.value) }
+    }
+
+    var statusText: String {
+        let running = entries.count - stopStarts.count
+        switch running {
+        case _ where isScanning && entries.isEmpty: return "Scanning…"
+        case ...0: return "No busy ports"
+        case 1: return "1 busy port"
+        default: return "\(running) busy ports"
+        }
+    }
+
+    var isAnimatingStops: Bool { !stopStarts.isEmpty }
+
+    func stopProgress(for id: PortEntry.ID, at date: Date) -> Double {
+        guard let start = stopStarts[id] else { return 0 }
+        return StopEffect.progress(startedAt: start, now: clockOverride ?? date)
+    }
+
+    // MARK: - Scanning
+
     func start() {
         applyFilter()
         monitor.start(portRange: settings.portRange, interval: settings.effectiveRefreshInterval)
     }
 
     func refresh() {
-        isScanning = true
         monitor.refresh()
     }
 
-    func kill(_ entry: PortEntry, force: Bool) {
+    /// Shows fixed entries without scanning; used for screenshots.
+    func showDemo(_ entries: [PortEntry]) {
+        monitor.stop()
+        receive(entries)
+    }
+
+    private func receive(_ entries: [PortEntry]) {
+        allEntries = entries
+        isScanning = false
+        applyFilter()
+    }
+
+    private func applyFilter() {
+        let now = Date()
+        let live = Set(allEntries.map(\.id))
+        // Forget dismissed entries once they're really gone, or after a grace period
+        // (a process that ignores SIGTERM should come back into view).
+        dismissed = dismissed.filter { live.contains($0.key) && now.timeIntervalSince($0.value) < 5 }
+
+        let filter = PortFilter(
+            includeSystemProcesses: settings.showSystemProcesses,
+            currentUser: NSUserName(),
+            homeDirectory: NSHomeDirectory()
+        )
+        var visible = filter.apply(to: allEntries).filter { dismissed[$0.id] == nil }
+        // Keep rows that are mid-animation even if their process already exited.
+        let animating = entries.filter { stopStarts[$0.id] != nil && !visible.contains($0) }
+        visible += animating
+        visible.sort { $0.port < $1.port }
+
+        if visible != entries {
+            entries = visible
+        }
+    }
+
+    // MARK: - Stopping
+
+    func stop(_ entry: PortEntry, force: Bool) {
         if settings.confirmBeforeKill {
             let title = force ? "Force quit \(entry.service.displayName)?" : "Stop \(entry.service.displayName)?"
             guard confirm(title, detail: "PID \(entry.pid) on port \(entry.port).", button: force ? "Force Quit" : "Stop") else { return }
@@ -51,13 +124,14 @@ final class PortListViewModel: ObservableObject {
         terminate([entry], force: force)
     }
 
-    func killAll() {
-        guard !entries.isEmpty else { return }
+    func stopAll() {
+        let targets = entries.filter { stopStarts[$0.id] == nil }
+        guard !targets.isEmpty else { return }
         if settings.confirmBeforeKill {
-            let list = entries.map { "\($0.service.displayName) on :\($0.port)" }.joined(separator: "\n")
-            guard confirm("Stop \(entries.count) processes?", detail: list, button: "Stop All") else { return }
+            let list = targets.map { "\($0.service.displayName) on :\($0.port)" }.joined(separator: "\n")
+            guard confirm("Stop \(targets.count) processes?", detail: list, button: "Stop All") else { return }
         }
-        terminate(entries, force: false)
+        terminate(targets, force: false)
     }
 
     private func terminate(_ targets: [PortEntry], force: Bool) {
@@ -68,18 +142,65 @@ final class PortListViewModel: ObservableObject {
                 try ProcessKiller.terminate(pid: entry.pid, force: force)
                 stopped.append(entry)
             } catch .notFound {
-                continue // Already gone, which is what the user wanted.
+                stopped.append(entry) // Already gone, which is what the user wanted.
             } catch {
                 failures.append((entry, error))
             }
         }
+
+        animateStop(stopped)
         if settings.showNotifications {
-            notifier.notifyStopped(stopped)
+            notifier?.notifyStopped(stopped)
         }
         if !failures.isEmpty {
             showFailures(failures)
         }
-        monitor.refresh()
+    }
+
+    /// Starts the slash animation on each row, cascading when several stop at once,
+    /// then removes the rows once they have collapsed.
+    private func animateStop(_ stopped: [PortEntry]) {
+        guard !stopped.isEmpty else { return }
+        let now = Date()
+        let stagger = 0.07
+        for (index, entry) in stopped.enumerated() {
+            stopStarts[entry.id] = now.addingTimeInterval(Double(index) * stagger)
+        }
+        Feedback.play(sound: settings.playSounds)
+
+        let total = StopEffect.duration + Double(stopped.count - 1) * stagger
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(total + 0.05))
+            guard let self else { return }
+            for entry in stopped {
+                stopStarts[entry.id] = nil
+                dismissed[entry.id] = Date()
+            }
+            applyFilter()
+            monitor.refresh()
+        }
+    }
+
+    // MARK: - Row actions
+
+    func actions(for entry: PortEntry) -> PortRowActions {
+        let url = URL(string: "http://localhost:\(entry.port)")!
+        let project = entry.projectPath.map { URL(fileURLWithPath: $0, isDirectory: true) }
+        return PortRowActions(
+            stop: { [weak self] force in self?.stop(entry, force: force) },
+            openInBrowser: { NSWorkspace.shared.open(url) },
+            copyURL: { Self.copy(url.absoluteString) },
+            revealProject: {
+                guard let project else { return }
+                NSWorkspace.shared.activateFileViewerSelecting([project])
+            },
+            openTerminal: {
+                guard let project,
+                      let terminal = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.Terminal") else { return }
+                NSWorkspace.shared.open([project], withApplicationAt: terminal, configuration: NSWorkspace.OpenConfiguration())
+            },
+            copyPID: { Self.copy(String(entry.pid)) }
+        )
     }
 
     func openSettings() {
@@ -90,21 +211,12 @@ final class PortListViewModel: ObservableObject {
         NSApp.terminate(nil)
     }
 
-    private func receive(_ entries: [PortEntry]) {
-        allEntries = entries
-        applyFilter()
-        isScanning = false
-        lastUpdated = Date()
+    private static func copy(_ string: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(string, forType: .string)
     }
 
-    private func applyFilter() {
-        let filter = PortFilter(
-            includeSystemProcesses: settings.showSystemProcesses,
-            currentUser: NSUserName(),
-            homeDirectory: NSHomeDirectory()
-        )
-        entries = filter.apply(to: allEntries)
-    }
+    // MARK: - Alerts
 
     private func confirm(_ title: String, detail: String, button: String) -> Bool {
         let alert = NSAlert()
@@ -134,5 +246,16 @@ final class PortListViewModel: ObservableObject {
         }.joined(separator: "\n")
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()
+    }
+}
+
+/// Sound and trackpad haptics for a stop.
+@MainActor
+private enum Feedback {
+    static func play(sound: Bool) {
+        NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
+        guard sound, let pop = NSSound(named: "Pop")?.copy() as? NSSound else { return }
+        pop.volume = 0.35
+        pop.play()
     }
 }

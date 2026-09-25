@@ -4,277 +4,224 @@ import SwiftUI
 struct PopoverView: View {
     @ObservedObject var viewModel: PortListViewModel
     @ObservedObject var settings: SettingsStore
-    @State private var hoveredEntry: String?
 
     var body: some View {
         VStack(spacing: 0) {
             header
-            Divider()
-                .padding(.horizontal, 12)
+            Divider().padding(.horizontal, 12)
             content
-            Divider()
-                .padding(.horizontal, 12)
+            Divider().padding(.horizontal, 12)
             footer
         }
-        .frame(width: 380)
-        .background(Color(nsColor: .windowBackgroundColor))
+        .frame(width: 348)
+        .tint(Brand.teal)
+        .background(shortcuts)
     }
 
     // MARK: - Header
-    private var header: some View {
-        HStack(alignment: .center, spacing: 12) {
-            PorticideMark()
-                .frame(width: 28, height: 28)
 
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 4) {
-                    Text(verbatim: "Ports \(viewModel.portRange.lowerBound)–\(viewModel.portRange.upperBound)")
+    private var header: some View {
+        HStack(spacing: 10) {
+            AppIconView(size: 32)
+
+            VStack(alignment: .leading, spacing: 1) {
+                (Text("Port") + Text("icide").foregroundColor(Brand.teal))
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                HStack(spacing: 5) {
+                    LiveIndicator(isActive: !viewModel.entries.isEmpty)
+                    Text(viewModel.statusText)
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
-                    Text("•")
-                        .foregroundStyle(.quaternary)
-                    Text(viewModel.lastUpdated.map(timeAgo) ?? "scanning…")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.tertiary)
+                        .contentTransition(.opacity)
                 }
             }
 
             Spacer()
 
-            // Active badge
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(viewModel.entries.isEmpty ? Color.gray : Color.green)
-                    .frame(width: 8, height: 8)
-                    .shadow(color: viewModel.entries.isEmpty ? .clear : .green.opacity(0.5), radius: 4)
-                Text("\(viewModel.entries.count)")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.primary)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(.ultraThinMaterial, in: Capsule())
+            OptionsMenu(viewModel: viewModel, settings: settings)
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 12)
+        .padding(.top, 12)
+        .padding(.bottom, 10)
     }
 
     // MARK: - Content
+
+    @ViewBuilder
     private var content: some View {
-        Group {
-            if viewModel.isScanning && viewModel.entries.isEmpty {
-                loadingView
-            } else if viewModel.entries.isEmpty {
-                emptyView
-            } else {
-                listView
+        if viewModel.isScanning && viewModel.entries.isEmpty {
+            VStack(spacing: 10) {
+                ProgressView().controlSize(.small)
+                Text("Scanning ports…")
+                    .font(.system(size: 12))
+                    .foregroundStyle(.secondary)
             }
-        }
-        .frame(minHeight: 120, maxHeight: 340)
-    }
-
-    private var loadingView: some View {
-        VStack(spacing: 12) {
-            ProgressView()
-                .scaleEffect(0.8)
-            Text("Scanning ports…")
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, minHeight: 120)
-    }
-
-    private var emptyView: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "checkmark.circle")
-                .font(.system(size: 32, weight: .light))
-                .foregroundStyle(.green)
-            Text("All clear!")
-                .font(.system(size: 14, weight: .medium))
-            Text("No active ports in range")
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, minHeight: 120)
-    }
-
-    private var listView: some View {
-        ScrollView {
-            LazyVStack(spacing: 6) {
-                ForEach(viewModel.entries) { entry in
-                    PortRow(
-                        entry: entry,
-                        detailed: settings.showDetailed,
-                        isHovered: hoveredEntry == entry.id,
-                        onKill: { viewModel.kill(entry, force: NSEvent.modifierFlags.contains(.option)) }
-                    )
-                    .onHover { isHovered in
-                        withAnimation(.easeInOut(duration: 0.15)) {
-                            hoveredEntry = isHovered ? entry.id : nil
+            .frame(maxWidth: .infinity, minHeight: 150)
+        } else if viewModel.entries.isEmpty {
+            EmptyStateView(portRange: viewModel.portRange)
+        } else {
+            ScrollView {
+                TimelineView(.animation(minimumInterval: nil, paused: !viewModel.isAnimatingStops)) { timeline in
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(viewModel.sections, id: \.category) { section in
+                        if viewModel.sections.count > 1 {
+                            SectionHeader(title: section.category.title)
+                        }
+                        ForEach(section.entries) { entry in
+                            PortRow(
+                                entry: entry,
+                                showCommandLine: settings.showCommandLines,
+                                stopProgress: viewModel.stopProgress(for: entry.id, at: timeline.date),
+                                actions: viewModel.actions(for: entry)
+                            )
+                            .transition(.opacity)
                         }
                     }
                 }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 6)
+                .animation(.spring(response: 0.35, dampingFraction: 0.9), value: viewModel.entries.map(\.id))
+                }
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
+            .frame(maxHeight: 400)
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 
     // MARK: - Footer
+
     private var footer: some View {
-        HStack(spacing: 0) {
-            footerButton(icon: "arrow.clockwise", label: "Refresh", showSpinner: viewModel.isScanning) {
-                viewModel.refresh()
-            }
-            Divider()
-                .frame(height: 20)
-            footerButton(icon: "xmark.circle", label: "Kill All", disabled: viewModel.entries.isEmpty) {
-                viewModel.killAll()
-            }
-            Divider()
-                .frame(height: 20)
-            footerButton(icon: "gearshape", label: "Settings") {
-                viewModel.openSettings()
-            }
-
+        HStack {
+            Text(verbatim: "Ports \(viewModel.portRange.lowerBound)–\(viewModel.portRange.upperBound)")
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
             Spacer()
-
-            Toggle(isOn: $settings.showDetailed) {
-                Text("Details")
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
+            Button {
+                viewModel.stopAll()
+            } label: {
+                Label("Stop All", systemImage: "xmark.circle")
             }
-            .toggleStyle(.switch)
-            .controlSize(.mini)
-
-            Divider()
-                .frame(height: 20)
-                .padding(.horizontal, 8)
-
-            footerButton(icon: "power", label: "Quit") {
-                viewModel.quit()
-            }
+            .buttonStyle(StopAllButtonStyle())
+            .disabled(viewModel.entries.isEmpty)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
     }
 
-    @ViewBuilder
-    private func footerButton(icon: String, label: String, showSpinner: Bool = false, disabled: Bool = false, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
-                if showSpinner {
-                    ProgressView()
-                        .scaleEffect(0.5)
-                        .frame(width: 12, height: 12)
-                } else {
-                    Image(systemName: icon)
-                        .font(.system(size: 11))
-                }
-                Text(label)
-                    .font(.system(size: 10, weight: .medium))
-            }
-            .foregroundStyle(disabled ? .tertiary : .secondary)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .contentShape(Rectangle())
+    /// Keyboard shortcuts while the popover is focused.
+    private var shortcuts: some View {
+        Group {
+            Button("Refresh", action: viewModel.refresh).keyboardShortcut("r")
+            Button("Settings", action: viewModel.openSettings).keyboardShortcut(",")
+            Button("Quit", action: viewModel.quit).keyboardShortcut("q")
         }
-        .buttonStyle(.plain)
-        .disabled(disabled)
-        .help(label)
-    }
-
-    private func timeAgo(_ date: Date) -> String {
-        let seconds = Int(-date.timeIntervalSinceNow)
-        if seconds < 5 { return "just now" }
-        if seconds < 60 { return "\(seconds)s ago" }
-        let minutes = seconds / 60
-        return "\(minutes)m ago"
+        .opacity(0)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 
-// MARK: - Port Row
-private struct PortRow: View {
-    let entry: PortEntry
-    let detailed: Bool
-    let isHovered: Bool
-    let onKill: () -> Void
+// MARK: - Components
+
+private struct SectionHeader: View {
+    let title: String
 
     var body: some View {
-        HStack(alignment: .center, spacing: 10) {
-            // Port badge
-            Text(verbatim: String(entry.port))
-                .font(.system(size: 12, weight: .bold, design: .monospaced))
-                .foregroundStyle(.white)
-                .frame(width: 52, height: 28)
-                .background(
-                    LinearGradient(
-                        colors: [entry.service.kind.tint, entry.service.kind.tint.opacity(0.7)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    in: RoundedRectangle(cornerRadius: 6)
-                )
+        Text(title.uppercased())
+            .font(.system(size: 10, weight: .semibold))
+            .tracking(0.6)
+            .foregroundStyle(.tertiary)
+            .padding(.horizontal, 10)
+            .padding(.top, 8)
+            .padding(.bottom, 2)
+    }
+}
 
-            // Service info
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 5) {
-                    Image(systemName: entry.service.kind.symbolName)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(entry.service.kind.tint)
-                    Text(entry.service.displayName)
-                        .font(.system(size: 12, weight: .medium))
-                        .lineLimit(1)
-                    if let detail = entry.service.detail {
-                        Text(detail)
-                            .font(.system(size: 10, weight: .regular))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 1)
-                            .background(Color.secondary.opacity(0.1), in: Capsule())
-                    }
-                }
-                if let path = entry.projectPath {
-                    Text((path as NSString).abbreviatingWithTildeInPath)
-                        .font(.system(size: 10))
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                }
-                if detailed, let command = entry.commandLine {
-                    Text(command)
-                        .font(.system(size: 9, design: .monospaced))
-                        .foregroundStyle(.quaternary)
-                        .lineLimit(1)
-                }
+/// A dot that softly pulses while ports are busy.
+private struct LiveIndicator: View {
+    let isActive: Bool
+    @State private var pulse = false
+
+    var body: some View {
+        Circle()
+            .fill(isActive ? Brand.teal : Color.secondary.opacity(0.5))
+            .frame(width: 6, height: 6)
+            .background(
+                Circle()
+                    .stroke(Brand.teal, lineWidth: 1.5)
+                    .scaleEffect(pulse ? 2.4 : 1)
+                    .opacity(isActive && !pulse ? 0.7 : 0)
+            )
+            .onAppear {
+                withAnimation(.easeOut(duration: 1.6).repeatForever(autoreverses: false)) { pulse = true }
             }
+    }
+}
 
-            Spacer(minLength: 4)
+private struct OptionsMenu: View {
+    @ObservedObject var viewModel: PortListViewModel
+    @ObservedObject var settings: SettingsStore
 
-            // PID and kill
-            HStack(spacing: 8) {
-                Text(verbatim: String(entry.pid))
-                    .font(.system(size: 10, design: .monospaced))
-                    .foregroundStyle(.tertiary)
-
-                Button(action: onKill) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 16))
-                        .foregroundStyle(isHovered ? .red : .secondary.opacity(0.6))
-                }
-                .buttonStyle(.plain)
-                .help("Stop process (⌥-click to force quit)")
-            }
+    var body: some View {
+        Menu {
+            Toggle("Show System Processes", isOn: $settings.showSystemProcesses)
+            Toggle("Show Command Lines", isOn: $settings.showCommandLines)
+            Divider()
+            Button("Refresh", action: viewModel.refresh)
+            Button("Settings…", action: viewModel.openSettings)
+            Divider()
+            Button("Quit Porticide", action: viewModel.quit)
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .font(.system(size: 15))
+                .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(isHovered ? Color.primary.opacity(0.05) : Color.clear)
-        )
-        .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(.ultraThinMaterial)
-        )
-        .animation(.easeInOut(duration: 0.1), value: isHovered)
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .tint(.secondary)
+        .fixedSize()
+        .help("Options")
+    }
+}
+
+private struct StopAllButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+    @State private var isHovered = false
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(isEnabled ? Color.red : Color.secondary.opacity(0.5))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(
+                Capsule().fill(Color.red.opacity(isEnabled ? (configuration.isPressed ? 0.24 : isHovered ? 0.16 : 0.1) : 0.04))
+            )
+            .onHover { isHovered = $0 }
+            .animation(.easeOut(duration: 0.12), value: isHovered)
+    }
+}
+
+/// Shown when nothing is listening: the mark draws its slash in on appear.
+private struct EmptyStateView: View {
+    let portRange: ClosedRange<Int>
+    @State private var slash: CGFloat = 0
+
+    var body: some View {
+        VStack(spacing: 8) {
+            PorticideMark(socketColor: .secondary.opacity(0.35), slashProgress: slash)
+                .frame(width: 54, height: 54)
+                .padding(.bottom, 4)
+            Text("All ports are free")
+                .font(.system(size: 14, weight: .semibold))
+            Text(verbatim: "Nothing is listening on \(portRange.lowerBound)–\(portRange.upperBound).")
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, minHeight: 170)
+        .onAppear {
+            slash = 0
+            withAnimation(.easeOut(duration: 0.5).delay(0.15)) { slash = 1 }
+        }
     }
 }

@@ -16,7 +16,11 @@ let package = Package(
         // The menu bar app (AppKit + SwiftUI).
         .executableTarget(
             name: "Porticide",
-            dependencies: ["PorticideKit"]
+            dependencies: ["PorticideKit"],
+            resources: [
+                // Service logos from Simple Icons (CC0). Trademarks belong to their owners.
+                .copy("Resources/Logos")
+            ]
         ),
         .testTarget(
             name: "PorticideKitTests",
