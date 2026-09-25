@@ -39,7 +39,6 @@ struct PortRow: View {
             .padding(.vertical, 6)
             .background(background)
             .opacity(1 - collapse)
-            .scaleEffect(1 - fade * 0.03, anchor: .leading)
         }
         .clipped(enabled: collapse > 0)
         .contentShape(Rectangle())
@@ -118,10 +117,11 @@ struct PortRow: View {
 
     private var trailing: some View {
         HStack(spacing: 4) {
-            if isHovered && entry.service.kind.speaksHTTP {
-                RowIconButton(systemImage: "safari", help: "Open http://localhost:\(entry.port)", action: actions.openInBrowser)
-                    .transition(.opacity.combined(with: .scale(scale: 0.8)))
-            }
+            // The slot is always laid out so the port column never shifts on hover.
+            RowIconButton(systemImage: "safari", help: "Open http://localhost:\(entry.port)", action: actions.openInBrowser)
+                .opacity(isHovered && entry.service.kind.speaksHTTP ? 1 : 0)
+                .disabled(!entry.service.kind.speaksHTTP || isStopping)
+                .accessibilityHidden(!entry.service.kind.speaksHTTP)
 
             portLabel
 

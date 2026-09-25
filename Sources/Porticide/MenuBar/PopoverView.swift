@@ -83,6 +83,10 @@ struct PopoverView: View {
                 .animation(.spring(response: 0.35, dampingFraction: 0.9), value: viewModel.entries.map(\.id))
                 }
             }
+            // Legacy scrollers ("Show scroll bars: Always") take width from the content; as
+            // rows collapse the list crosses the height limit and the whole port column would
+            // jump sideways. Scrolling still works with the trackpad or wheel.
+            .scrollIndicators(.never)
             .frame(maxHeight: 400)
             .fixedSize(horizontal: false, vertical: true)
         }
