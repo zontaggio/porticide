@@ -69,6 +69,12 @@ struct PortRow: View {
                         .background(Color.primary.opacity(0.07), in: Capsule())
                         .lineLimit(1)
                 }
+                if let label = entry.launchdLabel {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .help("Kept running by launchd (\(label)). Stopping it unloads the service until you log in again.")
+                }
             }
             Text(subtitle)
                 .font(.system(size: 11))

@@ -20,8 +20,10 @@ public actor PortScanner {
 
     /// Entries sorted by port, TCP before UDP.
     public func scan(portRange: ClosedRange<Int>) async -> [PortEntry] {
-        let output = await CommandRunner.run("/usr/sbin/lsof", arguments: Self.lsofArguments)
-        let sockets = LsofParser.parse(output, portRange: portRange)
+        async let lsof = CommandRunner.run("/usr/sbin/lsof", arguments: Self.lsofArguments)
+        async let launchdJobs = LaunchdJobs.running()
+        let sockets = LsofParser.parse(await lsof.stdout, portRange: portRange)
+        let jobs = await launchdJobs
 
         let livePIDs = Set(sockets.map(\.pid))
         cache = cache.filter { livePIDs.contains($0.key) }
@@ -34,7 +36,8 @@ public actor PortScanner {
                     executablePath: details.executablePath,
                     commandLine: details.commandLine,
                     projectPath: details.projectPath,
-                    service: details.service
+                    service: details.service,
+                    launchdLabel: jobs[socket.pid]
                 )
             }
             .sorted { ($0.port, $0.socket.transport == .tcp ? 0 : 1) < ($1.port, $1.socket.transport == .tcp ? 0 : 1) }

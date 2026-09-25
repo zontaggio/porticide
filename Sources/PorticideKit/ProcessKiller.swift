@@ -6,6 +6,8 @@ public enum ProcessKiller {
         case permissionDenied
         /// The process already exited.
         case notFound
+        /// launchd refused to stop the job; carries its error message.
+        case serviceControl(String)
         case other(errno: Int32)
     }
 
@@ -16,6 +18,16 @@ public enum ProcessKiller {
         case EPERM: throw .permissionDenied
         case ESRCH: throw .notFound
         case let code: throw .other(errno: code)
+        }
+    }
+
+    /// Stops the process behind `entry`. Processes supervised by launchd are booted out
+    /// of their job instead of signalled, because launchd would restart them at once.
+    public static func stop(_ entry: PortEntry, force: Bool) async throws(Failure) {
+        if let label = entry.launchdLabel {
+            try await LaunchdJobs.bootOut(label: label)
+        } else {
+            try terminate(pid: entry.pid, force: force)
         }
     }
 }

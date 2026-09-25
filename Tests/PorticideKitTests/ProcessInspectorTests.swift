@@ -15,11 +15,18 @@ struct ProcessInspectorTests {
         #expect(canonical(workingDirectory) == canonical(FileManager.default.currentDirectoryPath))
     }
 
+    @Test func readsParentOfCurrentProcess() throws {
+        let parent = try #require(ProcessInspector.parent(of: getpid()))
+        #expect(parent.pid == getppid())
+        #expect(!parent.name.isEmpty)
+    }
+
     @Test func returnsNilForMissingProcess() {
         let missing: Int32 = 99_999_999
         #expect(ProcessInspector.executablePath(pid: missing) == nil)
         #expect(ProcessInspector.workingDirectory(pid: missing) == nil)
         #expect(ProcessInspector.commandLine(pid: missing) == nil)
+        #expect(ProcessInspector.parent(of: missing) == nil)
     }
 
     private func canonical(_ path: String) -> String {

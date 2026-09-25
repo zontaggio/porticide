@@ -142,28 +142,37 @@ final class PortListViewModel: ObservableObject {
         terminate(targets, force: false)
     }
 
+    /// Starts the exit animation right away and stops the processes in the background;
+    /// rows whose process couldn't be stopped snap back.
     private func terminate(_ targets: [PortEntry], force: Bool) {
         // A row may have started stopping while a confirmation dialog was open.
         let targets = targets.filter { stopStarts[$0.id] == nil }
-        var stopped: [PortEntry] = []
-        var failures: [(PortEntry, ProcessKiller.Failure)] = []
-        for entry in targets {
-            do {
-                try ProcessKiller.terminate(pid: entry.pid, force: force)
-                stopped.append(entry)
-            } catch .notFound {
-                stopped.append(entry) // Already gone, which is what the user wanted.
-            } catch {
-                failures.append((entry, error))
-            }
-        }
+        guard !targets.isEmpty else { return }
+        animateStop(targets)
 
-        animateStop(stopped)
-        if settings.showNotifications {
-            notifier?.notifyStopped(stopped)
-        }
-        if !failures.isEmpty {
-            showFailures(failures)
+        Task {
+            var stopped: [PortEntry] = []
+            var failures: [(PortEntry, ProcessKiller.Failure)] = []
+            for entry in targets {
+                do throws(ProcessKiller.Failure) {
+                    try await ProcessKiller.stop(entry, force: force)
+                    stopped.append(entry)
+                } catch .notFound {
+                    stopped.append(entry) // Already gone, which is what the user wanted.
+                } catch {
+                    failures.append((entry, error))
+                }
+            }
+
+            for (entry, _) in failures {
+                stopStarts[entry.id] = nil
+            }
+            if settings.showNotifications {
+                notifier?.notifyStopped(stopped)
+            }
+            if !failures.isEmpty {
+                showFailures(failures)
+            }
         }
     }
 
@@ -252,6 +261,8 @@ final class PortListViewModel: ObservableObject {
                 "PID \(entry.pid) belongs to another user. Run `sudo kill \(entry.pid)` in Terminal."
             case .notFound:
                 "PID \(entry.pid) already exited."
+            case .serviceControl(let message):
+                "launchd couldn't stop \(entry.launchdLabel ?? "the service"): \(message)"
             case .other(let code):
                 "PID \(entry.pid): \(String(cString: strerror(code)))."
             }

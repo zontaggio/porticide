@@ -11,6 +11,18 @@ public enum ProcessInspector {
         return String(decoding: buffer.prefix(Int(length)), as: UTF8.self)
     }
 
+    /// The parent process and its name, e.g. a `nodemon` or `pm2` that restarts its children.
+    public static func parent(of pid: Int32) -> (pid: Int32, name: String)? {
+        var info = proc_bsdinfo()
+        let size = Int32(MemoryLayout<proc_bsdinfo>.size)
+        guard proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &info, size) == size else { return nil }
+        let parent = Int32(bitPattern: info.pbi_ppid)
+        var name = [UInt8](repeating: 0, count: Int(MAXCOMLEN) * 2 + 1)
+        let length = proc_name(parent, &name, UInt32(name.count))
+        guard length > 0 else { return (parent, "") }
+        return (parent, String(decoding: name.prefix(Int(length)), as: UTF8.self))
+    }
+
     public static func workingDirectory(pid: Int32) -> String? {
         var info = proc_vnodepathinfo()
         let size = Int32(MemoryLayout<proc_vnodepathinfo>.size)
