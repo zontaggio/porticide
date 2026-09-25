@@ -35,8 +35,9 @@ Porticide lives in the menu bar, shows every dev server that's listening, tells 
 ## Features
 
 - **Knows your stack.** Recognises 38 dev servers, databases and tools (Vite, Next.js, Django, FastAPI, Rails, PostgreSQL, Redis, Docker, Ollama and more) and shows each one's logo, version and project folder.
-- **One click to stop.** Sends `SIGTERM`; <kbd>⌥</kbd>-click sends `SIGKILL`. **Stop All** clears everything at once. If a process belongs to another user, Porticide tells you the exact `sudo kill` to run instead of failing silently.
-- **Only what matters.** macOS services (AirPlay Receiver on 5000/7000, Control Center…) and app helpers are hidden by default. Groups servers into *Dev Servers*, *Databases* and *Services*.
+- **One click to stop, and it stays stopped.** Sends `SIGTERM` (<kbd>⌥</kbd>-click for `SIGKILL`). Services kept alive by launchd, like `brew services` or background gateways, are stopped through `launchctl` so they don't come back 10 seconds later. If something else restarts a server (nodemon, pm2…), Porticide names it and offers to stop it too.
+- **Never in your way.** No dialogs: confirmations (off by default) and errors appear inline, so the popover stays open. If a process belongs to another user, you get the exact `sudo kill` command to copy.
+- **Only what matters.** macOS services (AirPlay Receiver on 5000/7000, Control Center…), app helpers and shared Bonjour sockets are hidden by default. Servers are grouped into *Dev Servers*, *Databases* and *Services*.
 - **Handy shortcuts.** Open `localhost:<port>` in the browser, reveal the project in Finder, open it in Terminal, copy the URL or PID.
 - **Quietly native.** SwiftUI and AppKit, no dependencies. Shows the busy-port count in the menu bar, can open at login and can notify you when a process stops.
 - **Light on resources.** One `lsof` call per scan; everything else is read straight from the kernel with `libproc` and `sysctl`, and cached per process.
@@ -73,13 +74,13 @@ make install    # builds Porticide.app and copies it to /Applications
 | Action | How |
 | --- | --- |
 | Show busy ports | Click the icon in the menu bar |
-| Stop a server | Click <kbd>⊗</kbd> next to its port |
+| Stop a server | Click <kbd>⊗</kbd> next to its port (with *Ask before stopping* on, click the red **Stop** that appears) |
 | Force quit (`SIGKILL`) | <kbd>⌥</kbd>-click <kbd>⊗</kbd>, or right-click → **Force Quit** |
 | Open in the browser | Hover a row and click the Safari icon |
 | More actions | Right-click a row |
 | Refresh / Settings / Quit | <kbd>⌘R</kbd> / <kbd>⌘,</kbd> / <kbd>⌘Q</kbd> while the popover is open |
 
-Settings let you change the scanned port range (3000–9999 by default), the refresh interval, confirmations, sounds, notifications and whether system processes are shown.
+Settings let you change the scanned port range (3000–9999 by default), the refresh interval, whether to ask before stopping, sounds, notifications and whether system processes are shown.
 
 ## How it works
 
@@ -90,6 +91,7 @@ flowchart LR
     kernel["libproc / sysctl<br/>path · cwd · argv"] --> scanner
     scanner --> classifier[ServiceClassifier]
     scanner --> locator["ProjectLocator<br/>(nearest git root)"]
+    launchd["launchctl list"] --> scanner
     scanner --> filter[PortFilter]
     filter --> ui["Menu bar popover<br/>(SwiftUI)"]
 ```
@@ -97,7 +99,8 @@ flowchart LR
 1. **Discover.** `lsof -nP -iTCP -sTCP:LISTEN -iUDP -F cLPn` lists listening sockets in lsof's field format, which, unlike the table, never truncates process names.
 2. **Inspect.** For each new PID, the executable path (`proc_pidpath`), working directory (`proc_pidinfo`) and arguments (`sysctl(KERN_PROCARGS2)`) come straight from the kernel, with no `ps` or extra `lsof` per process. The project is the nearest git root above the working directory, worktrees included.
 3. **Classify.** Rules match the *file names* of the executable and its arguments (`node …/.bin/vite` → Vite), so `bundle exec` is never mistaken for Bun. Unknown processes get a hint from well-known ports (`5173` → *usually Vite*).
-4. **Filter.** Other users' processes, macOS system paths and app helpers are hidden; Homebrew services such as PostgreSQL stay visible.
+4. **Filter.** Other users' processes, macOS system paths, app helpers and multicast DNS sockets are hidden; Homebrew services such as PostgreSQL stay visible.
+5. **Stop.** Plain processes get a signal. Processes that `launchctl list` attributes to a LaunchAgent are booted out of launchd instead, since `KeepAlive` would restart them.
 
 ### Project structure
 
