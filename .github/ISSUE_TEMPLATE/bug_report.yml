@@ -1,0 +1,29 @@
+name: Bug report
+description: Something doesn't work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: process
+    attributes:
+      label: Process details
+      description: For detection issues, paste the output of `lsof -nP -iTCP -sTCP:LISTEN | grep <port>` and `ps -o command= -p <pid>`.
+      render: shell
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: macOS 15.3
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Porticide version
+      placeholder: 1.1.0
