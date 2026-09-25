@@ -44,7 +44,8 @@ struct SparkBurst: View {
     let seed: Int
     let accent: Color
 
-    private static let emitAt = 0.18
+    /// When the sparks burst, as a fraction of the effect (also used to time haptics).
+    static let emitAt = 0.18
     private static let lifetime = 0.42 // Fraction of the effect duration.
 
     var body: some View {

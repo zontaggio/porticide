@@ -247,7 +247,7 @@ final class PortListViewModel: ObservableObject {
             starts[entry.id] = now.addingTimeInterval(Double(index) * stagger)
         }
         stopStarts.merge(starts) { _, new in new }
-        Feedback.play(sound: settings.playSounds)
+        Feedback.playStop(count: stopped.count, stagger: stagger, haptics: settings.hapticFeedback, sound: settings.playSounds)
 
         let total = StopEffect.duration + Double(stopped.count - 1) * stagger
         Task { [weak self] in
@@ -338,13 +338,34 @@ final class PortListViewModel: ObservableObject {
     }
 }
 
-/// Sound and trackpad haptics for a stop.
+/// Sound and trackpad haptics for a stop, timed to the animation.
 @MainActor
 private enum Feedback {
-    static func play(sound: Bool) {
-        NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
+    /// A light tap as the slash strikes the port, then a firm double tap when the sparks
+    /// burst. With Stop All, each row adds its own burst, like a ratchet.
+    ///
+    /// macOS only plays haptics while a finger rests on a Force Touch trackpad, which is
+    /// the case when stopping with a click; there's nothing to feel with a mouse.
+    static func playStop(count: Int, stagger: TimeInterval, haptics: Bool, sound: Bool) {
+        if haptics {
+            let performer = NSHapticFeedbackManager.defaultPerformer
+            performer.perform(.alignment, performanceTime: .now)
+            let burst = StopEffect.duration * SparkBurst.emitAt
+            for index in 0..<min(count, 8) {
+                let delay = burst + Double(index) * stagger
+                tap(.levelChange, after: delay)
+                tap(.levelChange, after: delay + 0.05)
+            }
+        }
         guard sound, let pop = NSSound(named: "Pop")?.copy() as? NSSound else { return }
         pop.volume = 0.35
         pop.play()
+    }
+
+    private static func tap(_ pattern: NSHapticFeedbackManager.FeedbackPattern, after delay: TimeInterval) {
+        Task {
+            try? await Task.sleep(for: .seconds(delay))
+            NSHapticFeedbackManager.defaultPerformer.perform(pattern, performanceTime: .now)
+        }
     }
 }

@@ -35,6 +35,7 @@ struct SettingsView: View {
             Section {
                 Toggle("Ask before stopping", isOn: $settings.askBeforeStopping)
                 Toggle("Play a sound", isOn: $settings.playSounds)
+                Toggle("Trackpad haptics", isOn: $settings.hapticFeedback)
                 Toggle("Notify when a process is stopped", isOn: $settings.showNotifications)
                     .disabled(!KillNotifier.isAvailable)
                     .onChange(of: settings.showNotifications) { enabled in
@@ -49,7 +50,7 @@ struct SettingsView: View {
             } header: {
                 Text("Stopping")
             } footer: {
-                Text("When asking is on, the first click arms the button and a second click stops the process.")
+                Text("When asking is on, the first click arms the button and a second click stops the process. Haptics need a Force Touch trackpad.")
                     .settingsFootnote()
             }
 

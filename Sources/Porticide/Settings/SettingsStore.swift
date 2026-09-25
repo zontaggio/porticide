@@ -14,6 +14,7 @@ final class SettingsStore: ObservableObject {
     @Published var showCommandLines: Bool { didSet { defaults.set(showCommandLines, forKey: Keys.showCommandLines) } }
     @Published var showCountInMenuBar: Bool { didSet { defaults.set(showCountInMenuBar, forKey: Keys.showCountInMenuBar) } }
     @Published var playSounds: Bool { didSet { defaults.set(playSounds, forKey: Keys.playSounds) } }
+    @Published var hapticFeedback: Bool { didSet { defaults.set(hapticFeedback, forKey: Keys.hapticFeedback) } }
     @Published var showSystemProcesses: Bool { didSet { defaults.set(showSystemProcesses, forKey: Keys.showSystemProcesses) } }
 
     /// The range to scan. Safe to use even while the user is mid-edit with start > end.
@@ -34,6 +35,7 @@ final class SettingsStore: ObservableObject {
         showCommandLines = defaults.object(forKey: Keys.showCommandLines) as? Bool ?? false
         showCountInMenuBar = defaults.object(forKey: Keys.showCountInMenuBar) as? Bool ?? true
         playSounds = defaults.object(forKey: Keys.playSounds) as? Bool ?? true
+        hapticFeedback = defaults.object(forKey: Keys.hapticFeedback) as? Bool ?? true
         showSystemProcesses = defaults.object(forKey: Keys.showSystemProcesses) as? Bool ?? false
     }
 
@@ -48,6 +50,7 @@ final class SettingsStore: ObservableObject {
         static let showCommandLines = "showDetailed" // Kept from 1.0 so existing preferences carry over.
         static let showCountInMenuBar = "showCountInMenuBar"
         static let playSounds = "playSounds"
+        static let hapticFeedback = "hapticFeedback"
         static let showSystemProcesses = "showSystemProcesses"
     }
 }
