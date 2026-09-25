@@ -13,7 +13,7 @@ let package = Package(
             name: "Porticide",
             path: "Sources/Porticide",
             resources: [
-                .copy("assets")
+                .process("Resources")
             ]
         ),
         .testTarget(

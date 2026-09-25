@@ -21,13 +21,13 @@ struct PopoverView: View {
     // MARK: - Header
     private var header: some View {
         HStack(alignment: .center, spacing: 12) {
-            // App logo
-            if let logoURL = Bundle.main.url(forResource: "knife", withExtension: "svg", subdirectory: "assets"),
-               let logoImage = NSImage(contentsOf: logoURL) {
-                Image(nsImage: logoImage)
+            if let logo = AppAssets.logo {
+                Image(nsImage: logo)
+                    .renderingMode(.template)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 32, height: 32)
+                    .frame(width: 28, height: 28)
+                    .foregroundStyle(.primary)
             } else {
                 Text("🔪")
                     .font(.system(size: 24))
