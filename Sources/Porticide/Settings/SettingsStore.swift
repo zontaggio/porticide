@@ -9,7 +9,6 @@ final class SettingsStore: ObservableObject {
     @Published var portEnd: Int { didSet { defaults.set(portEnd, forKey: Keys.portEnd) } }
     @Published var refreshInterval: TimeInterval { didSet { defaults.set(refreshInterval, forKey: Keys.refreshInterval) } }
     @Published var confirmBeforeKill: Bool { didSet { defaults.set(confirmBeforeKill, forKey: Keys.confirmBeforeKill) } }
-    @Published var launchAtLogin: Bool { didSet { defaults.set(launchAtLogin, forKey: Keys.launchAtLogin) } }
     @Published var showNotifications: Bool { didSet { defaults.set(showNotifications, forKey: Keys.showNotifications) } }
     @Published var showDetailed: Bool { didSet { defaults.set(showDetailed, forKey: Keys.showDetailed) } }
     @Published var showSystemProcesses: Bool { didSet { defaults.set(showSystemProcesses, forKey: Keys.showSystemProcesses) } }
@@ -28,7 +27,6 @@ final class SettingsStore: ObservableObject {
         portEnd = defaults.object(forKey: Keys.portEnd) as? Int ?? 9999
         refreshInterval = defaults.object(forKey: Keys.refreshInterval) as? Double ?? 3.0
         confirmBeforeKill = defaults.object(forKey: Keys.confirmBeforeKill) as? Bool ?? true
-        launchAtLogin = defaults.object(forKey: Keys.launchAtLogin) as? Bool ?? false
         showNotifications = defaults.object(forKey: Keys.showNotifications) as? Bool ?? false
         showDetailed = defaults.object(forKey: Keys.showDetailed) as? Bool ?? false
         showSystemProcesses = defaults.object(forKey: Keys.showSystemProcesses) as? Bool ?? false
@@ -39,7 +37,6 @@ final class SettingsStore: ObservableObject {
         static let portEnd = "portEnd"
         static let refreshInterval = "refreshInterval"
         static let confirmBeforeKill = "confirmBeforeKill"
-        static let launchAtLogin = "launchAtLogin"
         static let showNotifications = "showNotifications"
         static let showDetailed = "showDetailed"
         static let showSystemProcesses = "showSystemProcesses"

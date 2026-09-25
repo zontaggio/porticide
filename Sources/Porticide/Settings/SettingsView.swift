@@ -2,6 +2,8 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var settings: SettingsStore
+    @State private var launchAtLogin = LoginItem.isEnabled
+    @State private var loginItemError: String?
 
     private let portFormatter: NumberFormatter = {
         let formatter = NumberFormatter()
@@ -38,7 +40,7 @@ struct SettingsView: View {
 
             Section("Behavior") {
                 Toggle("Confirm before kill", isOn: $settings.confirmBeforeKill)
-                Toggle("Launch at login", isOn: $settings.launchAtLogin)
+                launchAtLoginToggle
                 Toggle("Show notifications", isOn: $settings.showNotifications)
                 Toggle("Show detailed view", isOn: $settings.showDetailed)
                 Toggle("Show system processes", isOn: $settings.showSystemProcesses)
@@ -46,5 +48,34 @@ struct SettingsView: View {
         }
         .padding(16)
         .frame(width: 320)
+    }
+
+    private var launchAtLoginToggle: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Toggle("Launch at login", isOn: Binding(
+                get: { launchAtLogin },
+                set: { enabled in
+                    do {
+                        try LoginItem.setEnabled(enabled)
+                        loginItemError = nil
+                    } catch {
+                        loginItemError = error.localizedDescription
+                    }
+                    launchAtLogin = LoginItem.isEnabled
+                }
+            ))
+            .disabled(!LoginItem.isAvailable)
+
+            if !LoginItem.isAvailable {
+                Text("Available when running Porticide.app")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if let loginItemError {
+                Text(loginItemError)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+        }
+        .onAppear { launchAtLogin = LoginItem.isEnabled }
     }
 }
