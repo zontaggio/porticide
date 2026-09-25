@@ -33,6 +33,17 @@ struct PortFilterTests {
         #expect(filter.apply(to: [helper]).isEmpty)
     }
 
+    @Test func hidesSharedMulticastDNSSockets() {
+        let mdns = PortEntry(
+            socket: ListeningSocket(port: 5353, pid: 100, processName: "node", user: "me", transport: .udp),
+            executablePath: "/opt/homebrew/bin/node",
+            commandLine: "openclaw-gateway",
+            projectPath: nil,
+            service: ServiceInfo(kind: .node)
+        )
+        #expect(filter.apply(to: [mdns]).isEmpty)
+    }
+
     @Test func hidesOtherUsersProcesses() {
         let other = entry(user: "root", project: "/Users/me/code/web")
         #expect(filter.apply(to: [other]).isEmpty)

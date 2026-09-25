@@ -21,6 +21,7 @@ public struct PortFilter: Sendable {
     }
 
     func isUserProcess(_ entry: PortEntry) -> Bool {
+        if entry.isMulticastDNS { return false }
         if let user = entry.user, user != currentUser { return false }
         if Self.systemProcessNames.contains(where: entry.processName.contains) { return false }
 
@@ -61,5 +62,13 @@ public struct PortFilter: Sendable {
 
     static func isSystemPath(_ path: String) -> Bool {
         systemPathPrefixes.contains { path.hasPrefix($0) }
+    }
+}
+
+extension PortEntry {
+    /// Multicast DNS (Bonjour). Browsers, chat apps and discovery daemons all share
+    /// this socket, so it never blocks anything and stopping its owner frees nothing.
+    var isMulticastDNS: Bool {
+        socket.transport == .udp && socket.port == 5353
     }
 }
