@@ -14,6 +14,19 @@ struct PortFilterTests {
         #expect(filter.apply(to: [node]) == [node])
     }
 
+    @Test func keepsHomebrewServicesWithoutProject() {
+        let postgres = entry(
+            name: "postgres", executable: "/opt/homebrew/opt/postgresql@16/bin/postgres", project: "/", kind: .postgres
+        )
+        let unknownBrewTool = entry(port: 3001, name: "mailpit", executable: "/opt/homebrew/bin/mailpit", project: "/")
+        #expect(filter.apply(to: [postgres, unknownBrewTool]) == [postgres, unknownBrewTool])
+    }
+
+    @Test func hidesUnrecognisedAppHelpersWithoutProject() {
+        let helper = entry(name: "SomeAgent", executable: "/Applications/Some.app/Contents/MacOS/SomeAgent", project: "/")
+        #expect(filter.apply(to: [helper]).isEmpty)
+    }
+
     @Test func hidesOtherUsersProcesses() {
         let other = entry(user: "root", project: "/Users/me/code/web")
         #expect(filter.apply(to: [other]).isEmpty)
@@ -52,14 +65,15 @@ struct PortFilterTests {
         name: String = "node",
         user: String = "me",
         executable: String? = nil,
-        project: String? = nil
+        project: String? = nil,
+        kind: ServiceKind = .other
     ) -> PortEntry {
         PortEntry(
             socket: ListeningSocket(port: port, pid: pid, processName: name, user: user, transport: .tcp),
             executablePath: executable,
             commandLine: nil,
             projectPath: project,
-            service: ServiceInfo(kind: .other, displayName: name)
+            service: ServiceInfo(kind: kind, displayName: name)
         )
     }
 }

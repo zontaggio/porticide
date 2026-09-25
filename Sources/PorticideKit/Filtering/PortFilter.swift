@@ -29,11 +29,14 @@ public struct PortFilter: Sendable {
             if executable.contains(".app/Contents/Frameworks/") && !executable.hasPrefix(homeDirectory) { return false }
         }
 
-        guard let project = entry.projectPath else {
-            // No project folder: only keep binaries that live in the user's home.
-            return entry.executablePath.map { $0.hasPrefix(homeDirectory) } ?? true
+        if let project = entry.projectPath, project != "/", project != homeDirectory, !Self.isSystemPath(project) {
+            return true
         }
-        return project != "/" && project != homeDirectory && !Self.isSystemPath(project)
+        // Not started from a project (e.g. `brew services`): keep services Porticide
+        // recognises and anything the user installed themselves.
+        if entry.service.kind != .other { return true }
+        guard let executable = entry.executablePath else { return entry.projectPath == nil }
+        return executable.hasPrefix(homeDirectory) || Self.userInstallPrefixes.contains { executable.hasPrefix($0) }
     }
 
     static let systemProcessNames: [String] = [
@@ -49,6 +52,9 @@ public struct PortFilter: Sendable {
         "/System/", "/usr/bin/", "/usr/sbin/", "/usr/libexec/", "/bin/", "/sbin/",
         "/private/", "/Library/Apple/", "/Applications/Utilities/",
     ]
+
+    /// Homebrew (Apple silicon and Intel) and MacPorts.
+    static let userInstallPrefixes = ["/opt/homebrew/", "/usr/local/", "/opt/local/"]
 
     static func isSystemPath(_ path: String) -> Bool {
         systemPathPrefixes.contains { path.hasPrefix($0) }
