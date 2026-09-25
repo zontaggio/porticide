@@ -6,6 +6,24 @@ All notable changes to Porticide are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-25
+
+### Added
+
+- Services kept alive by launchd (`brew services`, background gateways) are stopped with `launchctl bootout`, so they no longer come back seconds after being stopped. Rows show a badge for them.
+- When something restarts a stopped server (nodemon, pm2…), a banner names it and offers to stop it.
+
+### Changed
+
+- Stopping is one click again. "Ask before stopping" is off by default and, when on, confirms inline instead of with a dialog.
+- Errors appear as a banner inside the popover instead of an alert that closed it. Permission errors offer to copy the `sudo kill` command.
+- The stop animation starts as soon as you click, while the process is being stopped.
+
+### Fixed
+
+- The popover closed when stopping a process with confirmation on, hiding the stop animation.
+- Shared Bonjour sockets (UDP 5353) no longer show up as busy ports.
+
 ## [1.1.1] - 2026-09-25
 
 ### Fixed
@@ -54,7 +72,8 @@ All notable changes to Porticide are documented here. The format follows
 - One-click kill with optional confirmation.
 - Settings for port range, refresh interval and showing system processes.
 
-[Unreleased]: https://github.com/zontaggio/porticide/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/zontaggio/porticide/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/zontaggio/porticide/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/zontaggio/porticide/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/zontaggio/porticide/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/zontaggio/porticide/releases/tag/v1.0.0
