@@ -4,7 +4,8 @@ import SwiftUI
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = SettingsStore()
-    private lazy var viewModel = PortListViewModel(settings: settings) { [weak self] in
+    private let notifier = KillNotifier()
+    private lazy var viewModel = PortListViewModel(settings: settings, notifier: notifier) { [weak self] in
         self?.openSettings()
     }
     private var statusItem: NSStatusItem?
@@ -47,7 +48,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func openSettings() {
         popover.performClose(nil)
         if settingsWindow == nil {
-            settingsWindow = SettingsWindowController(settings: settings)
+            settingsWindow = SettingsWindowController(settings: settings, notifier: notifier)
         }
         settingsWindow?.showWindow(nil)
         settingsWindow?.window?.makeKeyAndOrderFront(nil)

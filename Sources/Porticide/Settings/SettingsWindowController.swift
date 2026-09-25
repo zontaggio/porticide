@@ -2,8 +2,8 @@ import AppKit
 import SwiftUI
 
 final class SettingsWindowController: NSWindowController {
-    init(settings: SettingsStore) {
-        let view = SettingsView(settings: settings)
+    init(settings: SettingsStore, notifier: KillNotifier) {
+        let view = SettingsView(settings: settings, notifier: notifier)
         let hosting = NSHostingView(rootView: view)
 
         let window = NSWindow(

@@ -12,12 +12,14 @@ final class PortListViewModel: ObservableObject {
     var portRange: ClosedRange<Int> { settings.portRange }
 
     private let monitor = PortMonitor()
+    private let notifier: KillNotifier
     private var allEntries: [PortEntry] = []
     private var cancellables: Set<AnyCancellable> = []
     private let onOpenSettings: () -> Void
 
-    init(settings: SettingsStore, onOpenSettings: @escaping () -> Void) {
+    init(settings: SettingsStore, notifier: KillNotifier, onOpenSettings: @escaping () -> Void) {
         self.settings = settings
+        self.notifier = notifier
         self.onOpenSettings = onOpenSettings
 
         monitor.onUpdate = { [weak self] entries in
@@ -59,15 +61,20 @@ final class PortListViewModel: ObservableObject {
     }
 
     private func terminate(_ targets: [PortEntry], force: Bool) {
+        var stopped: [PortEntry] = []
         var failures: [(PortEntry, ProcessKiller.Failure)] = []
         for entry in targets {
             do {
                 try ProcessKiller.terminate(pid: entry.pid, force: force)
+                stopped.append(entry)
             } catch .notFound {
                 continue // Already gone, which is what the user wanted.
             } catch {
                 failures.append((entry, error))
             }
+        }
+        if settings.showNotifications {
+            notifier.notifyStopped(stopped)
         }
         if !failures.isEmpty {
             showFailures(failures)

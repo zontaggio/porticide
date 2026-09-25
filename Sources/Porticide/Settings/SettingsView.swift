@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var settings: SettingsStore
+    let notifier: KillNotifier
     @State private var launchAtLogin = LoginItem.isEnabled
     @State private var loginItemError: String?
 
@@ -41,7 +42,17 @@ struct SettingsView: View {
             Section("Behavior") {
                 Toggle("Confirm before kill", isOn: $settings.confirmBeforeKill)
                 launchAtLoginToggle
-                Toggle("Show notifications", isOn: $settings.showNotifications)
+                Toggle("Notify when a process is stopped", isOn: $settings.showNotifications)
+                    .disabled(!KillNotifier.isAvailable)
+                    .onChange(of: settings.showNotifications) { enabled in
+                        guard enabled else { return }
+                        Task {
+                            // Turn the toggle back off if the user declines the system prompt.
+                            if await !notifier.requestAuthorization() {
+                                settings.showNotifications = false
+                            }
+                        }
+                    }
                 Toggle("Show detailed view", isOn: $settings.showDetailed)
                 Toggle("Show system processes", isOn: $settings.showSystemProcesses)
             }
