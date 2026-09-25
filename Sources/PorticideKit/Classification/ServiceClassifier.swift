@@ -93,9 +93,14 @@ private struct CommandTokens: Sendable {
         return tokens[index + 1]
     }
 
-    /// First `vX.Y.Z` in the command line, e.g. the one in `next-server (v14.2.3)`.
+    /// First `vX.Y.Z` outside a path, e.g. the one in `next-server (v14.2.3)`. Paths are
+    /// skipped because they often carry the runtime's version (`~/.nvm/versions/node/v20.11.0/…`).
     var version: String? {
-        guard let match = raw.firstMatch(of: /v(\d+\.\d+\.\d+)/) else { return nil }
-        return "v\(match.1)"
+        for token in tokens where !token.contains("/") {
+            if let match = token.firstMatch(of: /v(\d+\.\d+\.\d+)/) {
+                return "v\(match.1)"
+            }
+        }
+        return nil
     }
 }

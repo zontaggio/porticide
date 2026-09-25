@@ -41,6 +41,15 @@ struct ServiceClassifierTests {
         #expect(service.detail == "v14.2.3")
     }
 
+    @Test func ignoresRuntimeVersionInPaths() {
+        let service = ServiceClassifier.classify(
+            commandLine: "/Users/me/.nvm/versions/node/v20.11.0/bin/node /Users/me/web/node_modules/.bin/vite",
+            processName: "node"
+        )
+        #expect(service.kind == .vite)
+        #expect(service.detail == nil)
+    }
+
     @Test func extractsComposeFileForDocker() {
         let service = ServiceClassifier.classify(commandLine: "docker compose -f dev.yml up", processName: "docker")
         #expect(service.detail == "dev.yml")
