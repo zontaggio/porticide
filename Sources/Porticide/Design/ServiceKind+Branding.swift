@@ -3,6 +3,7 @@ import SwiftUI
 
 extension ServiceKind {
     /// File name of the bundled Simple Icons logo, without extension.
+    /// Run `scripts/update-logos.swift` after changing this list.
     var logoName: String? {
         switch self {
         case .vite: "vite"
@@ -103,7 +104,7 @@ enum ServiceLogos {
     static func image(for kind: ServiceKind) -> NSImage? {
         guard let name = kind.logoName else { return nil }
         if let cached = cache[name] { return cached }
-        guard let url = resourceBundle.url(forResource: name, withExtension: "svg", subdirectory: "Logos"),
+        guard let url = resourceBundle.url(forResource: name, withExtension: "pdf", subdirectory: "Logos"),
               let image = NSImage(contentsOf: url) else { return nil }
         image.isTemplate = true
         cache[name] = image

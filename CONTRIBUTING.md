@@ -24,7 +24,7 @@ Requirements: macOS 13+, Xcode 16+ (Swift 6, strict concurrency).
 2. Add a rule to `ServiceClassifier`. Rules are ordered: frameworks come before the runtimes that host them.
 3. Add a real-world command line to `ServiceClassifierTests`.
 4. If it has a default port, add it to `WellKnownPorts`.
-5. Download its logo from [Simple Icons](https://simpleicons.org) into `Sources/Porticide/Resources/Logos/`, then set `logoName` and `brandColor` in `ServiceKind+Branding.swift`.
+5. Find its slug on [Simple Icons](https://simpleicons.org), set `logoName` and `brandColor` in `ServiceKind+Branding.swift`, then run `swift scripts/update-logos.swift` to download it as a vector PDF.
 
 ## Conventions
 

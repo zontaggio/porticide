@@ -128,6 +128,7 @@ make run          # run from the terminal (login item and notifications need the
 make app          # build/Porticide.app
 make screenshots  # regenerate the README images from demo data
 make icon         # regenerate the app icon
+make logos        # re-download service logos from Simple Icons
 ```
 
 You can also open `Package.swift` in Xcode. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to teach Porticide about a new dev server.

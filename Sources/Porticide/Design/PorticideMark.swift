@@ -108,12 +108,3 @@ struct AppIconView: View {
             .shadow(color: .black.opacity(0.2), radius: 2, y: 1)
     }
 }
-
-#Preview {
-    HStack(spacing: 24) {
-        PorticideMark().frame(width: 64)
-        PorticideMark(slashProgress: 0.5).frame(width: 64)
-        PorticideMark(socketColor: .white).frame(width: 64).padding().background(Brand.ink)
-    }
-    .padding()
-}

@@ -18,7 +18,8 @@ let package = Package(
             name: "Porticide",
             dependencies: ["PorticideKit"],
             resources: [
-                // Service logos from Simple Icons (CC0). Trademarks belong to their owners.
+                // Service logos from Simple Icons (CC0), see scripts/update-logos.swift.
+                // Trademarks belong to their owners.
                 .copy("Resources/Logos")
             ]
         ),

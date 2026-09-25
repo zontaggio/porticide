@@ -1,4 +1,4 @@
-.PHONY: build test run app install screenshots icon clean
+.PHONY: build test run app install screenshots icon logos clean
 
 build:
 	swift build
@@ -24,6 +24,9 @@ screenshots:
 
 icon:
 	swift scripts/generate-app-icon.swift
+
+logos:
+	swift scripts/update-logos.swift
 
 clean:
 	swift package clean
