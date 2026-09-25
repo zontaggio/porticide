@@ -3,19 +3,14 @@ import SwiftUI
 
 final class SettingsWindowController: NSWindowController {
     init(settings: SettingsStore, notifier: KillNotifier) {
-        let view = SettingsView(settings: settings, notifier: notifier)
-        let hosting = NSHostingView(rootView: view)
+        let hostingController = NSHostingController(rootView: SettingsView(settings: settings, notifier: notifier))
+        hostingController.sizingOptions = .preferredContentSize
 
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 360, height: 240),
-            styleMask: [.titled, .closable, .miniaturizable],
-            backing: .buffered,
-            defer: false
-        )
-        window.center()
-        window.contentView = hosting
+        let window = NSWindow(contentViewController: hostingController)
         window.title = "Porticide Settings"
+        window.styleMask = [.titled, .closable]
         window.isReleasedWhenClosed = false
+        window.center()
 
         super.init(window: window)
     }

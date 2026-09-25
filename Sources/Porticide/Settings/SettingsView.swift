@@ -1,51 +1,44 @@
+import PorticideKit
 import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var settings: SettingsStore
-    let notifier: KillNotifier
+    let notifier: KillNotifier?
+
     @State private var launchAtLogin = LoginItem.isEnabled
     @State private var loginItemError: String?
 
-    private let portFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.minimum = 1
-        formatter.maximum = 65535
-        formatter.allowsFloats = false
-        return formatter
-    }()
-
-    private let intervalFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.minimum = 1
-        formatter.maximum = 60
-        formatter.allowsFloats = true
-        return formatter
-    }()
+    private static let refreshOptions: [TimeInterval] = [1, 2, 3, 5, 10, 30]
 
     var body: some View {
         Form {
-            Section("Port Range") {
-                HStack {
-                    TextField("Start", value: $settings.portStart, formatter: portFormatter)
-                        .frame(width: 80)
-                    Text("–")
-                    TextField("End", value: $settings.portEnd, formatter: portFormatter)
-                        .frame(width: 80)
+            Section {
+                LabeledContent("Port range") {
+                    HStack(spacing: 6) {
+                        portField(value: $settings.portStart)
+                        Text("–").foregroundStyle(.secondary)
+                        portField(value: $settings.portEnd)
+                    }
                 }
+                Picker("Refresh every", selection: $settings.refreshInterval) {
+                    ForEach(refreshOptions, id: \.self) { seconds in
+                        Text(seconds == 1 ? "1 second" : "\(Int(seconds)) seconds").tag(seconds)
+                    }
+                }
+            } header: {
+                Text("Scanning")
+            } footer: {
+                Text("Porticide lists processes listening on TCP and UDP ports in this range.")
+                    .settingsFootnote()
             }
 
-            Section("Refresh") {
-                TextField("Seconds", value: $settings.refreshInterval, formatter: intervalFormatter)
-                    .frame(width: 80)
-            }
-
-            Section("Behavior") {
-                Toggle("Confirm before kill", isOn: $settings.confirmBeforeKill)
-                launchAtLoginToggle
+            Section("Stopping") {
+                Toggle("Ask before stopping", isOn: $settings.confirmBeforeKill)
+                Toggle("Play a sound", isOn: $settings.playSounds)
                 Toggle("Notify when a process is stopped", isOn: $settings.showNotifications)
                     .disabled(!KillNotifier.isAvailable)
                     .onChange(of: settings.showNotifications) { enabled in
-                        guard enabled else { return }
+                        guard enabled, let notifier else { return }
                         Task {
                             // Turn the toggle back off if the user declines the system prompt.
                             if await !notifier.requestAuthorization() {
@@ -53,17 +46,49 @@ struct SettingsView: View {
                             }
                         }
                     }
-                Toggle("Show command lines", isOn: $settings.showCommandLines)
+            }
+
+            Section {
                 Toggle("Show system processes", isOn: $settings.showSystemProcesses)
+                Toggle("Show command lines", isOn: $settings.showCommandLines)
+                Toggle("Show count in menu bar", isOn: $settings.showCountInMenuBar)
+            } header: {
+                Text("Display")
+            } footer: {
+                Text("System processes include macOS services such as AirPlay Receiver and apps' background helpers.")
+                    .settingsFootnote()
+            }
+
+            Section("General") {
+                launchAtLoginToggle
+            }
+
+            Section {
+                about
             }
         }
-        .padding(16)
-        .frame(width: 320)
+        .formStyle(.grouped)
+        .tint(Brand.teal)
+        .frame(width: 460)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var refreshOptions: [TimeInterval] {
+        Self.refreshOptions.contains(settings.refreshInterval)
+            ? Self.refreshOptions
+            : (Self.refreshOptions + [settings.refreshInterval]).sorted()
+    }
+
+    private func portField(value: Binding<Int>) -> some View {
+        TextField("", value: value, format: .number.grouping(.never))
+            .labelsHidden()
+            .multilineTextAlignment(.trailing)
+            .frame(width: 64)
     }
 
     private var launchAtLoginToggle: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Toggle("Launch at login", isOn: Binding(
+            Toggle("Open at login", isOn: Binding(
                 get: { launchAtLogin },
                 set: { enabled in
                     do {
@@ -78,9 +103,7 @@ struct SettingsView: View {
             .disabled(!LoginItem.isAvailable)
 
             if !LoginItem.isAvailable {
-                Text("Available when running Porticide.app")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text("Available when running Porticide.app").settingsFootnote()
             } else if let loginItemError {
                 Text(loginItemError)
                     .font(.caption)
@@ -88,5 +111,32 @@ struct SettingsView: View {
             }
         }
         .onAppear { launchAtLogin = LoginItem.isEnabled }
+    }
+
+    private var about: some View {
+        HStack(spacing: 12) {
+            AppIconView(size: 40)
+            VStack(alignment: .leading, spacing: 2) {
+                (Text("Port") + Text("icide").foregroundColor(Brand.teal))
+                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                Text("Version \(Self.version)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Link("GitHub", destination: URL(string: "https://github.com/zontaggio/porticide")!)
+                .font(.callout)
+        }
+        .padding(.vertical, 2)
+    }
+
+    private static var version: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev"
+    }
+}
+
+private extension Text {
+    func settingsFootnote() -> some View {
+        font(.caption).foregroundStyle(.secondary)
     }
 }

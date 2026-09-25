@@ -20,6 +20,10 @@ enum ScreenshotRenderer {
             try write(render(viewModel: viewModel, settings: settings, scheme: scheme), to: outputDirectory.appendingPathComponent("\(name).png"))
         }
 
+        let (_, settings) = makeDemo()
+        let settingsView = SettingsView(settings: settings, notifier: nil)
+        try write(render(settingsView, scheme: .dark, background: Color(white: 0.13)), to: outputDirectory.appendingPathComponent("settings-dark.png"))
+
         try renderStopAnimation(to: outputDirectory.appendingPathComponent("stop-animation.gif"))
         print("Screenshots written to \(outputDirectory.path)")
     }
@@ -99,8 +103,16 @@ enum ScreenshotRenderer {
     enum RenderError: Error { case capture, gif }
 
     private static func render(viewModel: PortListViewModel, settings: SettingsStore, scheme: ColorScheme) throws -> CGImage {
-        let root = PopoverView(viewModel: viewModel, settings: settings)
-            .background(scheme == .dark ? Color(white: 0.17) : Color(white: 0.965))
+        try render(
+            PopoverView(viewModel: viewModel, settings: settings),
+            scheme: scheme,
+            background: scheme == .dark ? Color(white: 0.17) : Color(white: 0.965)
+        )
+    }
+
+    private static func render(_ content: some View, scheme: ColorScheme, background: Color) throws -> CGImage {
+        let root = content
+            .background(background)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.primary.opacity(0.12), lineWidth: 0.5))
             .shadow(color: .black.opacity(0.25), radius: 18, y: 8)
